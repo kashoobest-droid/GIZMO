@@ -657,6 +657,35 @@
             }
         }
 
+        /* Additional LTR mobile fixes (English) */
+        @media (max-width: 991px) {
+            .navbar-custom .nav-link {
+                text-align: left !important;
+                padding-left: 1rem !important;
+                padding-right: 0.75rem !important;
+            }
+
+            /* Ensure dropdowns open to the left edge in LTR and align text left */
+            .dropdown-menu {
+                left: 0 !important;
+                right: auto !important;
+                text-align: left !important;
+            }
+
+            /* Fix search overflow in LTR on small screens */
+            .search-container {
+                direction: ltr !important;
+                text-align: left !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* Prevent horizontal overflow caused by fixed elements */
+            body, .container {
+                overflow-x: hidden !important;
+            }
+        }
+
         /* Dark Mode Styles */
         :root {
             --color-bg: #f5f5f5;
