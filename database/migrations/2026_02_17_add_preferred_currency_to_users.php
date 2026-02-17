@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'preferred_currency')) {
-                $table->string('preferred_currency')->default('SDG')->after('locale');
+                // Add column at the end to avoid errors on databases that don't have 'locale'
+                $table->string('preferred_currency')->default('SDG');
             }
         });
     }
