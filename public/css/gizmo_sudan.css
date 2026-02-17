@@ -1,0 +1,36 @@
+:root{
+  --gizmo-red:#DC143C;
+  --gizmo-red-dark:#8B0000;
+  --gizmo-white:#ffffff;
+  --gizmo-gray:#343A40;
+}
+
+/* Navbar overrides */
+.navbar-custom{background:var(--gizmo-white) !important;border-bottom:3px solid var(--gizmo-red) !important;box-shadow:0 2px 8px rgba(0,0,0,0.05) !important}
+.navbar-custom .navbar-brand{color:var(--gizmo-red) !important}
+.navbar-custom .nav-link{color:var(--gizmo-gray) !important}
+.navbar-custom .nav-link:hover{color:var(--gizmo-red-dark) !important}
+
+/* Buttons */
+.btn-warning, .btn-add-cart{background:var(--gizmo-red) !important;border-color:var(--gizmo-red) !important;color:var(--gizmo-white) !important}
+.btn-warning:hover, .btn-add-cart:hover{background:var(--gizmo-red-dark) !important}
+
+/* Badges / accents */
+.badge, .product-badge{background:var(--gizmo-red) !important;color:var(--gizmo-white) !important}
+
+/* Hero */
+.hero, .hero-section{background:linear-gradient(135deg,var(--gizmo-white) 0%,#fafafa 100%) !important;border-bottom:4px solid var(--gizmo-red) !important}
+.hero h1{color:var(--gizmo-red) !important}
+
+/* Cards */
+.card-header{border-bottom:3px solid var(--gizmo-red) !important}
+
+/* Footer */
+footer{border-top:4px solid var(--gizmo-red) !important}
+
+/* Small utilities */
+.text-brand{color:var(--gizmo-red) !important}
+
+/* Dark mode neutralization for brand colors */
+html.dark-mode .navbar-custom{background:#111 !important;border-bottom:3px solid var(--gizmo-red) !important}
+html.dark-mode .navbar-custom .nav-link{color:#ddd !important}
