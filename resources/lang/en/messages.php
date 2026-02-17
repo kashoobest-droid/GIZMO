@@ -29,6 +29,7 @@ return [
 
     // Products
     'add_to_cart' => 'Add to Cart',
+    'checkout' => 'Checkout',
     'add_to_favorites' => 'Add to Favorites',
     'remove_from_favorites' => 'Remove from Favorites',
     'in_stock' => 'In Stock',
@@ -138,4 +139,33 @@ return [
     'offer_special' => 'Special Offer',
     'offer_ends_in' => 'Ends in',
     'offer_started' => 'Started',
+
+    // Testimonials
+    'nav_testimonials' => 'Testimonials',
+    'testimonials_subtitle' => 'What our customers say about us',
+    'testimonial_1' => 'If you are looking for products, the market has products, but if you want quality and trust, GIZMO is the best.',
+    'testimonial_1_name' => 'Abu Saad',
+    'testimonial_2' => 'The best Store in Sudan.',
+    'testimonial_2_name' => 'Hassan Elsheikh',
+    'testimonial_3' => 'Undisputed the best in Sudan 🔥🔥🔥.',
+    'testimonial_3_name' => 'Mohamed Sh Dawod',
+    'testimonial_4' => 'Cheapest price and guaranteed quality.',
+    'testimonial_4_name' => 'Hoor Al-Janan',
+    'testimonial_5' => 'The best price, the best product, and the best treatment ♥️♥️.',
+    'testimonial_5_name' => 'Gasem Osama',
+    'testimonial_6' => 'High quality, trust and warranty.',
+    'testimonial_6_name' => 'Haram Apdelmonem',
+    'testimonial_7' => 'Trust, guarantee, quality paperwork in dealing and credibility in work.',
+    'testimonial_7_name' => 'Omnia Al Mansour',
+    'testimonial_8' => 'One of the best stores ever... high quality, competitive prices, handling and respect... for customers.',
+    'testimonial_8_name' => 'Mahmoud Al-Hasnabi',
+
+    // Currency
+    'currency_sdg' => 'SDG - Sudanese Dinar',
+    'currency_usd' => 'USD - US Dollar',
+    'currency_egp' => 'EGP - Egyptian Pound',
+    'currency_aed' => 'AED - UAE Dirham',
+    'currency_sar' => 'SAR - Saudi Riyal',
+    'currency_changed' => 'Currency changed successfully',
 ];
+

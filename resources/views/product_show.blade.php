@@ -349,7 +349,7 @@
                             @if($product->quantity < 5)<span class="text-danger small">({{ __('messages.product_only_left', ['count' => $product->quantity]) }})</span>@endif
                         @endif
                     </p>
-                    <h3 class="text-warning mb-4">${{ number_format($product->price, 2) }}</h3>
+                    <h3 class="text-warning mb-4">@currency($product->price)</h3>
                     @if($product->hasVisibleOffer())
                         @include('partials.offer_card', ['offer' => $product->offer])
                     @endif
@@ -451,7 +451,7 @@
                             @endif
                             <div class="card-body py-2">
                                 <h6 class="card-title small">{{ Str::limit($rel->name, 40) }}</h6>
-                                <p class="mb-0 text-warning fw-bold">${{ number_format($rel->price, 2) }}</p>
+                                <p class="mb-0 text-warning fw-bold">@currency($rel->price)</p>
                             </div>
                         </div>
                     </a>

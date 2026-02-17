@@ -6,38 +6,157 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <title>Order #{{ $order->id }} - KS Tech Store</title>
+    <link rel="stylesheet" href="/css/gizmo_sudan.css">
+    <title>Order #{{ $order->id }} - GIZMO Store</title>
     <style>
-        body { background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; }
-        .navbar-custom { background-color: #1a1a1a; }
-        .navbar-custom .navbar-brand, .navbar-custom .nav-link { color: #DC143C !important; }
-        .order-detail-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
-        .item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #ddd;
+        }
+
+        html.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --border-color: #3a3a3a;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar-custom {
+            background-color: var(--bg-primary);
+            border-bottom: 3px solid #DC143C;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar-custom .navbar-brand {
+            color: #DC143C !important;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .navbar-custom .nav-link {
+            color: var(--text-primary) !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.3s;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #DC143C !important;
+        }
+
+        .navbar-custom .nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .order-detail-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .badge {
+            font-size: 0.85rem;
+        }
+
+        h2, h5 {
+            color: var(--text-primary) !important;
+        }
+
+        html.dark-mode h2, html.dark-mode h5 {
+            color: #ffffff !important;
+        }
+
+        .form-select {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-select:focus {
+            background-color: var(--bg-secondary);
+            border-color: #DC143C;
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+        }
+
+        table {
+            color: var(--text-primary);
+        }
+
+        .table-borderless td {
+            border-color: var(--border-color);
+        }
+
+        .back-link {
+            color: #DC143C;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #8B0000;
+            text-decoration: underline;
+        }
+
+        hr {
+            border-color: var(--border-color);
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-custom navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/"><i class="fas fa-power-off"></i> GIZMO SD</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ route('orders.index') }}">My Orders</a>
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a class="navbar-brand" href="/"><i class="fas fa-power-off"></i> GIZMO Store</a>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <a class="nav-link" href="{{ route('orders.index') }}">
+                    <i class="fas fa-box-open"></i> My Orders
+                </a>
                 @auth
                     @if(auth()->user()->is_admin)
-                        <a class="nav-link" href="{{ route('admin.orders.index') }}">Manage Orders</a>
+                        <a class="nav-link" href="{{ route('admin.orders.index') }}">
+                            <i class="fas fa-cog"></i> Manage Orders
+                        </a>
                     @endif
                 @endauth
-                <a class="nav-link" href="/">Home</a>
-                <a class="nav-link" href="{{ route('cart.index') }}">Cart</a>
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a class="nav-link" href="{{ route('cart.index') }}">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                </a>
             </div>
         </div>
     </nav>
 
     <div class="container my-5">
-        <a href="{{ route('orders.index') }}" class="text-muted text-decoration-none mb-3 d-inline-block"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+        <a href="{{ route('orders.index') }}" class="back-link mb-3 d-inline-block"><i class="fas fa-arrow-left me-2"></i> Back to Orders</a>
 
         <div class="order-detail-card">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                <h2>Order #{{ $order->id }}</h2>
+                <h2 style="color: #DC143C;">Order #{{ $order->id }}</h2>
                 <div class="d-flex align-items-center gap-2">
                     @auth
                         @if(auth()->user()->is_admin)
@@ -71,9 +190,9 @@
                             </td>
                             <td class="align-middle">
                                 <strong>{{ $item->product_name }}</strong><br>
-                                <small class="text-muted">{{ $item->quantity }} × ${{ number_format($item->price, 2) }}</small>
+                                <small class="text-muted">{{ $item->quantity }} × @currency($item->price)</small>
                             </td>
-                            <td class="align-middle text-end">${{ number_format($item->subtotal, 2) }}</td>
+                            <td class="align-middle text-end">@currency($item->subtotal)</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -81,7 +200,7 @@
 
             <hr>
             <div class="d-flex justify-content-end">
-                <h4 class="text-warning">Total: ${{ number_format($order->total, 2) }}</h4>
+                <h4 style="color: #DC143C;">Total: @currency($order->total)</h4>
             </div>
 
             @if($order->shipping_address || $order->phone)
@@ -97,5 +216,36 @@
             @endif
         </div>
     </div>
+
+    <!-- Dark Mode Initialization Script -->
+    <script>
+        const STORAGE_KEY = 'gizmo-store-dark-mode';
+        const html = document.documentElement;
+
+        // Initialize dark mode on page load
+        function initializeDarkMode() {
+            const isDarkMode = localStorage.getItem(STORAGE_KEY) === 'true';
+            if (isDarkMode) {
+                html.classList.add('dark-mode');
+            } else {
+                html.classList.remove('dark-mode');
+            }
+        }
+
+        // Initialize immediately
+        initializeDarkMode();
+
+        // Listen for changes in localStorage from other tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                if (e.newValue === 'true') {
+                    html.classList.add('dark-mode');
+                } else {
+                    html.classList.remove('dark-mode');
+                }
+            }
+        });
+    </script>
+
 </body>
 </html>

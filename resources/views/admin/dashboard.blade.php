@@ -376,7 +376,7 @@
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-value">${{ number_format($totalRevenue, 0) }}</div>
+                    <div class="stat-card-value">@currency($totalRevenue)</div>
                     <div class="stat-card-label"><i class="fas fa-dollar-sign"></i> Total Revenue</div>
                 </div>
             </div>
@@ -426,7 +426,7 @@
                             <tr>
                                 <td><strong>#{{ $order->id }}</strong></td>
                                 <td>{{ $order->user->name }}</td>
-                                <td><strong>${{ number_format($order->total, 2) }}</strong></td>
+                                <td><strong>@currency($order->total)</strong></td>
                                 <td><span class="badge badge-{{ strtolower($order->status) }}">{{ ucfirst($order->status) }}</span></td>
                                 <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
                                 <td><a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-warning">View</a></td>

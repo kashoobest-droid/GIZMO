@@ -38,6 +38,43 @@
             color: #DC143C !important;
         }
 
+        /* Checkout and Orders Links */
+        .nav-link.checkout-link {
+            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+            color: white !important;
+            border-radius: 4px;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.3s;
+        }
+
+        .nav-link.checkout-link:hover {
+            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+            box-shadow: 0 4px 8px rgba(220, 20, 60, 0.4);
+        }
+
+        .nav-link.orders-link,
+        .dropdown-item.orders-link {
+            color: #fff !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-item.orders-link {
+            color: #1a1a1a !important;
+        }
+
+        .dropdown-item.orders-link i {
+            color: #DC143C;
+        }
+
+        .nav-link.orders-link:hover {
+            color: #DC143C !important;
+        }
+
+        .dropdown-item.orders-link:hover {
+            background-color: #f8f9fa;
+        }
         /* Mobile responsive navbar */
         .navbar-toggler { border: 1px solid #ffffff !important; }
         .navbar-toggler:focus { box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25) !important; }
@@ -588,6 +625,36 @@
 
         html[dir="rtl"] .footer-custom {
             text-align: right;
+        }
+
+        /* Additional RTL mobile fixes */
+        @media (max-width: 991px) {
+            html[dir="rtl"] .navbar-custom .nav-link {
+                text-align: right !important;
+                padding-right: 1rem !important;
+                padding-left: 0.75rem !important;
+            }
+
+            /* Ensure dropdowns open to the left side in RTL (so they remain on-screen)
+               and align their text to right */
+            html[dir="rtl"] .dropdown-menu {
+                right: 0 !important;
+                left: auto !important;
+                text-align: right !important;
+            }
+
+            /* Fix any hero / search overflow in RTL on small screens */
+            html[dir="rtl"] .search-container {
+                direction: rtl !important;
+                text-align: right !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* Prevent horizontal overflow caused by fixed elements */
+            html[dir="rtl"] body, html[dir="rtl"] .container {
+                overflow-x: hidden !important;
+            }
         }
 
         /* Dark Mode Styles */
@@ -1164,6 +1231,11 @@
             border-color: var(--color-primary);
             color: white;
         }
+
+        /* Cart badge text color for dark mode */
+        html.dark-mode .badge.text-dark {
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body>
@@ -1212,6 +1284,45 @@
                             </li>
                         </ul>
                     </li>
+                    <!-- Currency Switcher -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="currencyDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-money-bill"></i>
+                            <span class="ms-1">{{ session('currency', 'SDG') }}</span>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="currencyDropdown">
+                            <li>
+                                <a class="dropdown-item {{ session('currency', 'SDG') === 'SDG' ? 'active' : '' }}" href="{{ route('currency.set', 'SDG') }}">
+                                    @if(session('currency','SDG') === 'SDG')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
+                                    SDG - Sudanese Dinar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ session('currency', 'SDG') === 'USD' ? 'active' : '' }}" href="{{ route('currency.set', 'USD') }}">
+                                    @if(session('currency','SDG') === 'USD')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
+                                    USD - US Dollar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ session('currency', 'SDG') === 'EGP' ? 'active' : '' }}" href="{{ route('currency.set', 'EGP') }}">
+                                    @if(session('currency','SDG') === 'EGP')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
+                                    EGP - Egyptian Pound
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ session('currency', 'SDG') === 'AED' ? 'active' : '' }}" href="{{ route('currency.set', 'AED') }}">
+                                    @if(session('currency','SDG') === 'AED')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
+                                    AED - UAE Dirham
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ session('currency', 'SDG') === 'SAR' ? 'active' : '' }}" href="{{ route('currency.set', 'SAR') }}">
+                                    @if(session('currency','SDG') === 'SAR')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
+                                    SAR - Saudi Riyal
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="fas fa-home"></i> {{ __('messages.nav_home') }}</a>
                     </li>
@@ -1229,6 +1340,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ auth()->check() ? route('favorites.index') : route('login') }}"><i class="fas fa-heart"></i> {{ __('messages.nav_favorites') }}</a>
                     </li>
+                    @auth
+                    <li class="nav-item">
+                        <a class="nav-link checkout-link" href="{{ route('cart.index') }}"><i class="fas fa-credit-card"></i> {{ __('messages.checkout') }}</a>
+                    </li>
+                    @endauth
                     @php use Illuminate\Support\Facades\Auth; @endphp
                     @if(Auth::check())
                         <li class="nav-item dropdown">
@@ -1242,7 +1358,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> {{ __('messages.nav_profile') }}</a></li>
-                                <li><a class="dropdown-item" href="{{ route('orders.index') }}"><i class="fas fa-box"></i> {{ __('messages.nav_orders') }}</a></li>
+                                <li><a class="dropdown-item orders-link" href="{{ route('orders.index') }}"><i class="fas fa-box-open"></i> {{ __('messages.nav_orders') }}</a></li>
                                 @if(Auth::user()->is_admin)
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> {{ __('messages.nav_dashboard') }}</a></li>
@@ -1390,7 +1506,7 @@
                                 </div>
 
                                 <div class="product-price">
-                                    ${{ number_format($product->price, 2) }}
+                                    @currency($product->price)
                                 </div>
 
                                 @if($product->hasVisibleOffer())
@@ -1457,9 +1573,9 @@
             <div class="text-center mb-5">
                 <h2 class="mb-3" style="font-size: 2.5rem; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px;">
                     <i class="fas fa-star" style="color: #DAA520; margin-right: 10px;"></i>
-                    <span style="background: linear-gradient(135deg, #DC143C, #8B0000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Testimonials</span>
+                    <span style="background: linear-gradient(135deg, #DC143C, #8B0000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{{ __('messages.nav_testimonials') }}</span>
                 </h2>
-                <p class="text-dark fs-5" style="color: #666; font-weight: 500;">What our customers say about us</p>
+                <p class="text-dark fs-5" style="color: #666; font-weight: 500;">{{ __('messages.testimonials_subtitle') }}</p>
             </div>
 
             <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
@@ -1477,11 +1593,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"If you are looking for products, the market has products, but if you want quality and trust, GIZMO is the best."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_1') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">أ</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Abu Saad</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_1_name') }}</p>
                                                 <small class="text-muted">Verified Customer</small>
                                             </div>
                                         </div>
@@ -1504,11 +1620,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"The best Store in Sudan."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_2') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ح</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Hassan Elsheikh</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_2_name') }}</p>
                                                 <small class="text-muted">Verified Buyer</small>
                                             </div>
                                         </div>
@@ -1531,11 +1647,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Undisputed the best in Sudan 🔥🔥🔥."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_3') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">م</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Mohamed Sh Dawod</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_3_name') }}</p>
                                                 <small class="text-muted">Happy Customer</small>
                                             </div>
                                         </div>
@@ -1558,11 +1674,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Cheapest price and guaranteed quality."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_4') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ح</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Hoor Al-Janan</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_4_name') }}</p>
                                                 <small class="text-muted">Verified Purchase</small>
                                             </div>
                                         </div>
@@ -1585,11 +1701,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"The best price, the best product, and the best treatment ♥️♥️."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_5') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">غ</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Gasem Osama</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_5_name') }}</p>
                                                 <small class="text-muted">Verified Buyer</small>
                                             </div>
                                         </div>
@@ -1612,11 +1728,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"High quality, trust and warranty."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_6') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
-                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;\">ح</div>
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ح</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Haram Apdelmonem</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_6_name') }}</p>
                                                 <small class="text-muted">Verified Customer</small>
                                             </div>
                                         </div>
@@ -1639,11 +1755,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Trust, guarantee, quality paperwork in dealing and credibility in work."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_7') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ع</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Omnia Al Mansour</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_7_name') }}</p>
                                                 <small class="text-muted">Happy Customer</small>
                                             </div>
                                         </div>
@@ -1666,11 +1782,11 @@
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                             <i class="fas fa-star" style="color: #DAA520;"></i>
                                         </div>
-                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"One of the best stores ever... high quality, competitive prices, handling and respect... for customers."</p>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"{{ __('messages.testimonial_8') }}"</p>
                                         <div class="d-flex justify-content-center align-items-center gap-3">
                                             <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">م</div>
                                             <div class="text-start">
-                                                <p class="mb-0 fw-bold">Mahmoud Al-Hasnabi</p>
+                                                <p class="mb-0 fw-bold">{{ __('messages.testimonial_8_name') }}</p>
                                                 <small class="text-muted">Verified Purchase</small>
                                             </div>
                                         </div>

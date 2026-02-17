@@ -48,6 +48,9 @@ Route::get('ping', [teststoreController::class,'test']);
 // Language/Locale routes
 Route::get('/locale/{locale}', [LocaleController::class, 'setLocale'])->name('locale.set');
 
+// Currency routes
+Route::get('/currency/{currency}', [\App\Http\Controllers\CurrencyController::class, 'set'])->name('currency.set');
+
 // Public pages
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');

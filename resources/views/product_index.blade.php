@@ -473,7 +473,7 @@
                             <div class="product-info">
                                 <div class="product-info-row">
                                     <span class="product-info-label">Price:</span>
-                                    <span class="product-info-value">${{ number_format($product->price, 2) }}</span>
+                                    <span class="product-info-value">@currency($product->price)</span>
                                 </div>
                                 <div class="product-info-row">
                                     <span class="product-info-label">Stock:</span>

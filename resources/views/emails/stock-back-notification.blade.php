@@ -19,27 +19,36 @@
             background-color: white;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
             color: white;
             padding: 30px;
             text-align: center;
             border-bottom: 4px solid #DC143C;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 1px;
+        .header-logo {
+            display: inline-block;
+            margin-bottom: 15px;
         }
-        .header-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
+        .header-logo img {
+            height: 50px;
+            width: 50px;
+        }
+        .header h1 {
+            margin: 10px 0 5px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: -0.5px;
+        }
+        .header-subtitle {
+            margin: 5px 0 0;
+            font-size: 0.95rem;
+            opacity: 0.95;
         }
         .content {
             padding: 40px 30px;
         }
         .greeting {
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 20px;
             color: #333;
         }
@@ -109,6 +118,9 @@
             color: #666;
             text-align: center;
         }
+        .footer p {
+            margin: 5px 0;
+        }
         .social-links {
             margin-top: 15px;
             text-align: center;
@@ -125,20 +137,17 @@
             text-decoration: none !important;
             font-size: 14px;
             font-weight: bold;
-            text-align: center;
         }
         .helpful-text {
             background: #e7f3ff;
-            border-left: 4px solid #0099ff;
+            border-left: 4px solid #DC143C;
             padding: 15px;
             margin: 20px 0;
             border-radius: 4px;
             font-size: 13px;
-            color: #0066cc;
+            color: #222;
         }
-        .store-logo {
-            font-size: 20px;
-            font-weight: bold;
+        .helpful-text strong {
             color: #DC143C;
         }
     </style>
@@ -147,30 +156,32 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <div class="header-icon">🔔</div>
+            <div class="header-logo">
+                <img src="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png" alt="Gizmo Store Logo">
+            </div>
             <h1>{{ $storeName }}</h1>
-            <p style="margin: 5px 0;">Good News!</p>
+            <p class="header-subtitle">🎉 Good News! Your Product is Back in Stock</p>
         </div>
 
         <!-- Content -->
         <div class="content">
             <div class="greeting">
                 <p>Hi there!</p>
-                <p>We have exciting news! A product you wanted is now <strong>back in stock</strong>.</p>
+                <p>We have <strong>exciting news</strong>! A product you wanted is now <strong>back in stock</strong>.</p>
             </div>
 
             <!-- Product Card -->
             <div class="product-card">
                 <div class="product-name">{{ $product->name }}</div>
                 <div class="product-description">{{ $product->description }}</div>
-                <div class="product-price">${{ number_format($product->price, 2) }}</div>
+                <div class="product-price">@currency($product->price)</div>
                 <div style="margin: 15px 0;">
-                    <span class="stock-status">✓ In Stock</span>
+                    <span class="stock-status">✓ In Stock Now</span>
                 </div>
             </div>
 
             <div class="helpful-text">
-                <strong>📊 Limited Stock:</strong> With only {{ $product->quantity }} unit{{ $product->quantity !== 1 ? 's' : '' }} available, we recommend ordering soon to avoid missing out!
+                <strong>⚡ Limited Stock Available:</strong> With only {{ $product->quantity }} unit{{ $product->quantity !== 1 ? 's' : '' }} in stock, we recommend ordering soon to avoid missing out!
             </div>
 
             <!-- Call to Action Button -->
@@ -178,29 +189,29 @@
                 <a href="{{ $productUrl }}" class="cta-button">Shop Now</a>
             </div>
 
-            <p style="text-align: center; color: #666; font-size: 14px;">
+            <p style="text-align: center; color: #666; font-size: 13px;">
                 Or copy and paste this link in your browser:<br>
-                <a href="{{ $productUrl }}" style="color: #0099ff; text-decoration: none; word-break: break-all;">{{ $productUrl }}</a>
+                <a href="{{ $productUrl }}" style="color: #DC143C; text-decoration: none; word-break: break-all; font-weight: 500;">{{ $productUrl }}</a>
             </p>
 
             <hr class="divider">
 
             <p style="color: #666; font-size: 14px;">
-                Thank you for your interest in {{ $storeName }}. We're excited to help you find the perfect tech products at unbeatable prices!
+                Thank you for your interest in {{ $storeName }}. We're committed to helping you find the perfect tech products at unbeatable prices!
             </p>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p style="margin: 0;">{{ $storeName }} © 2026. All rights reserved.</p>
-            <p style="margin: 10px 0;">{{ config('app.url') }}</p>
+            <p><strong>{{ $storeName }}</strong> © 2026. All rights reserved.</p>
+            <p>Your trusted source for premium tech gadgets</p>
+            <p style="margin-top: 10px; font-size: 11px;">{{ config('app.url') }}</p>
             <div class="social-links">
-                <a href="https://www.facebook.com/gizmosudan/?locale=ar_AR" target="_blank" title="Facebook" style="color: white; text-decoration: none; font-weight: bold;">f</a>
-                <a href="https://x.com/gizmosudan" target="_blank" title="X (Twitter)" style="color: white; text-decoration: none; font-weight: bold;">𝕏</a>
-                <a href="https://www.instagram.com/gizmosudan" target="_blank" title="Instagram" style="color: white; text-decoration: none; font-weight: bold;">in</a>
-                <a href="https://www.tiktok.com/@gizmosudan" target="_blank" title="TikTok" style="color: white; text-decoration: none; font-weight: bold;">tt</a>
-                <a href="https://wa.me/249919001000" target="_blank" title="WhatsApp" style="color: white; text-decoration: none; font-weight: bold;">wa</a>
-                <a href="mailto:gizmobrand2@gmail.com" title="Email" style="color: white; text-decoration: none; font-weight: bold;">@</a>
+                <a href="https://www.facebook.com/gizmosudan/?locale=ar_AR" target="_blank" title="Facebook" style="color: white; text-decoration: none;">f</a>
+                <a href="https://x.com/gizmosudan" target="_blank" title="X (Twitter)" style="color: white; text-decoration: none;">𝕏</a>
+                <a href="https://www.instagram.com/gizmosudan" target="_blank" title="Instagram" style="color: white; text-decoration: none;">📷</a>
+                <a href="https://www.tiktok.com/@gizmosudan" target="_blank" title="TikTok" style="color: white; text-decoration: none;">♪</a>
+                <a href="https://wa.me/249919001000" target="_blank" title="WhatsApp" style="color: white; text-decoration: none;">💬</a>
             </div>
             <p style="margin: 15px 0 0 0; font-size: 11px;">
                 If you no longer wish to receive these notifications, you can unsubscribe by replying to this email.

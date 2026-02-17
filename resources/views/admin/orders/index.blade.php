@@ -473,7 +473,7 @@
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
-                    <div class="stat-card-value">${{ number_format($totalRevenue, 0) }}</div>
+                    <div class="stat-card-value">@currency($totalRevenue)</div>
                     <div class="stat-card-label"><i class="fas fa-dollar-sign"></i> Total Revenue</div>
                 </div>
             </div>
@@ -542,7 +542,7 @@
                                         {{ $order->items->count() }} item(s)
                                     </span>
                                 </td>
-                                <td><strong>${{ number_format($order->total, 2) }}</strong></td>
+                                <td><strong>@currency($order->total)</strong></td>
                                 <td>
                                     <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-inline">
                                         @csrf

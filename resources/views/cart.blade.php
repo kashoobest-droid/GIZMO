@@ -170,7 +170,7 @@
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">{{ $item->product->name }}</h6>
                                     <small class="text-muted">{{ optional($item->product->category)->name }}</small>
-                                    <p class="mb-0 mt-1 text-warning fw-bold">${{ number_format($item->product->price, 2) }}</p>
+                                    <p class="mb-0 mt-1 text-warning fw-bold">@currency($item->product->price)</p>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <form action="{{ route('cart.update', $item) }}" method="POST" class="d-flex align-items-center gap-1">
@@ -186,7 +186,7 @@
                                     </form>
                                 </div>
                                 <div class="text-end" style="min-width:80px;">
-                                    ${{ number_format($item->product->price * $item->quantity, 2) }}
+                                    @currency($item->product->price * $item->quantity)
                                 </div>
                             </div>
                         @endforeach
@@ -196,7 +196,7 @@
                     <div class="cart-card p-4">
                         <h5 class="mb-3">{{ __('messages.order_summary') }}</h5>
                         @php $subtotal = $cartItems->sum(fn($i) => $i->product->price * $i->quantity); @endphp
-                        <p class="d-flex justify-content-between mb-2"><span>{{ __('messages.subtotal') }} ({{ $cartItems->sum('quantity') }} {{ __('messages.items') }})</span><span class="cart-total">${{ number_format($subtotal, 2) }}</span></p>
+                        <p class="d-flex justify-content-between mb-2"><span>{{ __('messages.subtotal') }} ({{ $cartItems->sum('quantity') }} {{ __('messages.items') }})</span><span class="cart-total">@currency($subtotal)</span></p>
                         <hr>
                         <a href="{{ route('checkout') }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-lock"></i> {{ __('messages.checkout') }}</a>
                         <a href="/" class="btn btn-outline-secondary w-100"><i class="fas fa-arrow-left"></i> {{ __('messages.continue_shopping') }}</a>
