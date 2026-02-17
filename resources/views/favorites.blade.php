@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -49,6 +51,20 @@
         .navbar-custom .nav-link:hover { color: #DC143C !important; }
         .navbar-custom .btn-link.nav-link { color: #333333 !important; }
         .navbar-custom .btn-link.nav-link:hover { color: #DC143C !important; }
+        
+        /* Mobile responsive navbar */
+        .navbar-toggler { border: 1px solid #333333 !important; }
+        .navbar-toggler:focus { box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25) !important; }
+        .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important; }
+        .navbar-custom .navbar-nav { flex-direction: row; }
+        .navbar-custom .navbar-nav .nav-link { padding: 0 10px; white-space: nowrap; }
+        
+        @media (max-width: 991px) {
+            .navbar-custom .navbar-nav { flex-direction: column; }
+            .navbar-custom .navbar-nav .nav-link { padding: 0.75rem 0; border-bottom: 1px solid #e0e0e0; }
+            html.dark-mode .navbar-custom .navbar-nav .nav-link { border-bottom-color: #2a2a2a; }
+            .navbar-custom .navbar-nav .nav-link:last-child { border-bottom: none; }
+        }
         
         /* Dark mode navbar */
         html.dark-mode .navbar-custom { background-color: #1a1a1a; border-bottom: 3px solid #DC143C; }
@@ -107,15 +123,20 @@
     <nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/"><i class="fas fa-power-off"></i> GIZMO SD</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/"><i class="fas fa-home"></i> {{ __('messages.nav_home') }}</a>
-                <a class="nav-link" href="{{ route('cart.index') }}"><i class="fas fa-shopping-cart"></i> {{ __('messages.nav_cart') }}</a>
-                <a class="nav-link" href="{{ route('favorites.index') }}"><i class="fas fa-heart"></i> {{ __('messages.nav_favorites') }}</a>
-                <a class="nav-link" href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> {{ __('messages.nav_profile') }}</a>
-                <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-link nav-link" style="text-decoration:none;"><i class="fas fa-sign-out-alt"></i> {{ __('messages.nav_logout') }}</button>
-                </form>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/"><i class="fas fa-home"></i> {{ __('messages.nav_home') }}</a>
+                    <a class="nav-link" href="{{ route('cart.index') }}"><i class="fas fa-shopping-cart"></i> {{ __('messages.nav_cart') }}</a>
+                    <a class="nav-link" href="{{ route('favorites.index') }}"><i class="fas fa-heart"></i> {{ __('messages.nav_favorites') }}</a>
+                    <a class="nav-link" href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> {{ __('messages.nav_profile') }}</a>
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-link nav-link" style="text-decoration:none;"><i class="fas fa-sign-out-alt"></i> {{ __('messages.nav_logout') }}</button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
