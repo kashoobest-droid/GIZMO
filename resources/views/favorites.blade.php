@@ -60,10 +60,11 @@
         .navbar-custom .navbar-nav .nav-link { padding: 0 10px; white-space: nowrap; }
         
         @media (max-width: 991px) {
-            .navbar-custom .navbar-nav { flex-direction: column; }
+            .navbar-custom .navbar-nav { flex-direction: column; margin-left: 0 !important; margin-right: auto !important; }
             .navbar-custom .navbar-nav .nav-link { padding: 0.75rem 0; border-bottom: 1px solid #e0e0e0; }
             html.dark-mode .navbar-custom .navbar-nav .nav-link { border-bottom-color: #2a2a2a; }
             .navbar-custom .navbar-nav .nav-link:last-child { border-bottom: none; }
+            html[dir="rtl"] .navbar-custom .navbar-nav { margin-left: auto !important; margin-right: 0 !important; }
         }
         
         /* Dark mode navbar */

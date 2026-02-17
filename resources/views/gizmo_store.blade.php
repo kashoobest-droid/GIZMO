@@ -38,6 +38,22 @@
             color: #DC143C !important;
         }
 
+        /* Mobile responsive navbar */
+        .navbar-toggler { border: 1px solid #ffffff !important; }
+        .navbar-toggler:focus { box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25) !important; }
+        .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important; }
+
+        @media (max-width: 991px) {
+            .navbar-custom .nav-link { margin: 0; padding: 0.75rem 0; border-bottom: 1px solid #3a3a3a; }
+            .navbar-custom .nav-link:last-child { border-bottom: none; }
+            html.dark-mode .navbar-custom .nav-link { border-bottom-color: #2a2a2a; }
+            .search-container { margin: 15px 0 !important; width: 100%; }
+            .search-container input { padding: 10px; border-radius: 5px; }
+            .navbar-custom { padding: 0.5rem 0; }
+            .navbar-nav { margin-left: 0 !important; margin-right: auto !important; }
+            html[dir="rtl"] .navbar-nav { margin-left: auto !important; margin-right: 0 !important; }
+        }
+
         /* User avatar in navbar dropdown */
         .nav-user-avatar {
             width: 36px;
