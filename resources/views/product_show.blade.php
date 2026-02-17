@@ -12,10 +12,32 @@
     <style>
         /* Light Mode (Default) */
         body { background-color: #f5f5f5; color: #333333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; }
-        .navbar-custom { background-color: #1a1a1a; padding: 20px 0 !important; }
-        .navbar-custom .navbar-nav { display: flex !important; flex-direction: row !important; gap: 20px; align-items: center; }
-        .navbar-custom .nav-link { padding: 0 !important; margin: 0 !important; display: inline-flex; align-items: center; gap: 5px; }
-        .navbar-custom .navbar-brand, .navbar-custom .nav-link { color: #DC143C !important; }
+        .navbar-custom { background-color: #ffffff; border-bottom: 3px solid #DC143C; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .navbar-custom .navbar-brand { color: #DC143C !important; font-size: 1.8rem; font-weight: bold; }
+        .navbar-custom .nav-link { color: #333333 !important; margin: 0 10px; transition: color 0.3s; }
+        .navbar-custom .nav-link:hover { color: #DC143C !important; }
+        .navbar-custom .btn-link.nav-link { color: #333333 !important; }
+        .navbar-custom .btn-link.nav-link:hover { color: #DC143C !important; }
+        
+        /* Mobile responsive navbar */
+        .navbar-toggler { border: 1px solid #333333 !important; }
+        .navbar-toggler:focus { box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25) !important; }
+        .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important; }
+        .navbar-custom .navbar-nav { flex-direction: row; }
+        .navbar-custom .navbar-nav .nav-link { padding: 0 10px; white-space: nowrap; }
+        
+        @media (max-width: 991px) {
+            .navbar-custom .navbar-nav { flex-direction: column; margin-left: 0 !important; margin-right: auto !important; }
+            .navbar-custom .navbar-nav .nav-link { padding: 0.75rem 0; border-bottom: 1px solid #e0e0e0; }
+            html.dark-mode .navbar-custom .navbar-nav .nav-link { border-bottom-color: #2a2a2a; }
+            .navbar-custom .navbar-nav .nav-link:last-child { border-bottom: none; }
+            html[dir="rtl"] .navbar-custom .navbar-nav { margin-left: auto !important; margin-right: 0 !important; }
+        }
+        
+        /* Dark mode navbar */
+        html.dark-mode .navbar-custom { background-color: #1a1a1a; border-bottom: 3px solid #DC143C; }
+        html.dark-mode .navbar-custom .nav-link { color: #ffffff !important; }
+        html.dark-mode .navbar-custom .btn-link.nav-link { color: #ffffff !important; }
         .product-detail-img { max-height: 400px; object-fit: contain; }
         .bg-white { background: white; color: #333333; }
         h2, h3, h4, h5, h6 { color: #333333; }
@@ -79,7 +101,8 @@
         html.dark-mode .form-control, html.dark-mode .form-select { background-color: #2a2a2a; border-color: #3a3a3a; color: #e0e0e0; }
         html.dark-mode .form-control:focus, html.dark-mode .form-select:focus { border-color: #DC143C; box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25); }
         html.dark-mode .alert { background-color: #1a1a1a; border-color: #2a2a2a; color: #e0e0e0; }
-        html.dark-mode .alert-info { background-color: #1a2a3a; border-color: #2a4a5a; color: #90ccff; }
+        html.dark-mode .alert-info { background-color: #1a2a3a; border-color: #2a4a5a; color: #ffffff; }
+        html.dark-mode .alert-info strong { color: #ffffff !important; }
         html.dark-mode .alert-success { background-color: #1a2a1a; border-color: #2a5a2a; color: #90ee90; }
         html.dark-mode .bg-light { background-color: #2a2a2a !important; }
         html.dark-mode .border { border-color: #2a2a2a !important; }
@@ -235,76 +258,16 @@
         }
         
         /* Mobile Menu Styles */
-        .navbar-toggler { 
-            border: none; 
-            font-size: 1.5rem; 
-            color: #DC143C !important;
-            padding: 0 !important;
-            display: none;
-        }
-        
+        .navbar-toggler { border: none; font-size: 1.5rem; color: #DC143C !important; padding: 0 !important; }
         .navbar-toggler:focus { outline: none; box-shadow: none; }
         .navbar-toggler-icon { width: 1.5em; height: 1.5em; }
-        .navbar-menu { position: static; }
         
-        @media (max-width: 767px) {
-            .navbar-toggler { display: block !important; }
-            
-            .navbar-menu {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 70vw;
-                max-width: 300px;
-                height: 100vh;
-                background-color: #1a1a1a;
-                display: flex;
-                flex-direction: column;
-                padding: 80px 20px 20px 20px;
-                z-index: 999;
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                overflow-y: auto;
-            }
-            
-            html[dir="rtl"] .navbar-menu {
-                right: auto;
-                left: 0;
-                transform: translateX(-100%);
-            }
-            
-            .navbar-menu.show {
-                transform: translateX(0) !important;
-            }
-            
-            html[dir="rtl"] .navbar-menu.show {
-                transform: translateX(0) !important;
-            }
-            
-            body.menu-open {
-                overflow: hidden;
-            }
-            
-            .navbar-menu .nav-link {
-                font-size: 1.2rem;
-                padding: 15px 0 !important;
-                display: flex;
-                align-items: center;
-                gap: 15px;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            .navbar-toggler { display: none !important; }
-            .navbar-menu { 
-                position: static !important;
-                transform: translateX(0) !important;
-                height: auto !important;
-                width: auto !important;
-                padding: 0 !important;
-                flex-direction: row !important;
-                background: none !important;
-            }
+        @media (max-width: 991px) {
+            .navbar-custom .navbar-nav { flex-direction: column; margin-left: 0 !important; margin-right: auto !important; }
+            .navbar-custom .navbar-nav .nav-link { padding: 0.75rem 0; border-bottom: 1px solid #e0e0e0; }
+            html.dark-mode .navbar-custom .navbar-nav .nav-link { border-bottom-color: #2a2a2a; }
+            .navbar-custom .navbar-nav .nav-link:last-child { border-bottom: none; }
+            html[dir="rtl"] .navbar-custom .navbar-nav { margin-left: auto !important; margin-right: 0 !important; }
         }
     </style>
     <script>
@@ -314,52 +277,28 @@
             if (darkModeEnabled) {
                 document.documentElement.classList.add('dark-mode');
             }
-            
-            // Mobile Menu Toggle
-            const navbarToggle = document.getElementById('navbarToggle');
-            const navbarMenu = document.getElementById('navbarMenu');
-            const navLinks = document.querySelectorAll('.navbar-menu .nav-link');
-            
-            if (navbarToggle) {
-                navbarToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navbarMenu.classList.toggle('show');
-                    document.body.classList.toggle('menu-open');
-                });
-                
-                // Close menu when a link is clicked
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        navbarMenu.classList.remove('show');
-                        document.body.classList.remove('menu-open');
-                    });
-                });
-                
-                // Close menu when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (navbarMenu.classList.contains('show') && 
-                        !navbarMenu.contains(e.target) && 
-                        !navbarToggle.contains(e.target)) {
-                        navbarMenu.classList.remove('show');
-                        document.body.classList.remove('menu-open');
-                    }
-                });
-            }
         });
     </script>
 </head>
 <body>
-    <nav class="navbar navbar-custom navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/"><i class="fas fa-power-off"></i> GIZMO SD</a>
-            <button class="navbar-toggler d-md-none" type="button" id="navbarToggle">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="navbar-nav ms-auto navbar-menu" id="navbarMenu">
-                <a class="nav-link" href="/"><i class="fas fa-home"></i> {{ __('messages.nav_home') }}</a>
-                <a class="nav-link" href="{{ auth()->check() ? route('cart.index') : route('login') }}"><i class="fas fa-shopping-cart"></i> {{ __('messages.nav_cart') }}</a>
-                <a class="nav-link" href="{{ auth()->check() ? route('favorites.index') : route('login') }}"><i class="far fa-heart"></i> {{ __('messages.nav_favorites') }}</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/"><i class="fas fa-home"></i> {{ __('messages.nav_home') }}</a>
+                    <a class="nav-link" href="{{ auth()->check() ? route('cart.index') : route('login') }}"><i class="fas fa-shopping-cart"></i> {{ __('messages.nav_cart') }}</a>
+                    <a class="nav-link" href="{{ auth()->check() ? route('favorites.index') : route('login') }}"><i class="far fa-heart"></i> {{ __('messages.nav_favorites') }}</a>
+                    <a class="nav-link" href="{{ route('locale.set', app()->getLocale() === 'en' ? 'ar' : 'en') }}"><i class="fas fa-globe"></i> {{ app()->getLocale() === 'ar' ? 'EN' : 'AR' }}</a>
+                    @auth
+                    <a class="nav-link" href="{{ route('profile.edit') }}"><i class="fas fa-user-circle"></i> {{ Auth::user()->name }}</a>
+                    @else
+                    <a class="nav-link" href="{{ route('login') }}"><i class="fas fa-user"></i> {{ __('messages.nav_sign_in') }}</a>
+                    @endauth
+                </div>
             </div>
         </div>
     </nav>

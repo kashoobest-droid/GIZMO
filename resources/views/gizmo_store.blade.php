@@ -1451,6 +1451,284 @@
         @endif
     </div>
 
+    <!-- Testimonials Section -->
+    <section class="py-5" style="background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="mb-3" style="font-size: 2.5rem; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px;">
+                    <i class="fas fa-star" style="color: #DAA520; margin-right: 10px;"></i>
+                    <span style="background: linear-gradient(135deg, #DC143C, #8B0000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Testimonials</span>
+                </h2>
+                <p class="text-dark fs-5" style="color: #666; font-weight: 500;">What our customers say about us</p>
+            </div>
+
+            <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    <!-- Review 1 -->
+                    <div class="carousel-item active">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"If you are looking for products, the market has products, but if you want quality and trust, GIZMO is the best."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">أ</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Abu Saad</p>
+                                                <small class="text-muted">Verified Customer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 2 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"The best Store in Sudan."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ح</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Hassan Elsheikh</p>
+                                                <small class="text-muted">Verified Buyer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 3 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Undisputed the best in Sudan 🔥🔥🔥."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">م</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Mohamed Sh Dawod</p>
+                                                <small class="text-muted">Happy Customer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 4 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Cheapest price and guaranteed quality."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ح</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Hoor Al-Janan</p>
+                                                <small class="text-muted">Verified Purchase</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 5 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"The best price, the best product, and the best treatment ♥️♥️."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">غ</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Gasem Osama</p>
+                                                <small class="text-muted">Verified Buyer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 6 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"High quality, trust and warranty."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;\">ح</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Haram Apdelmonem</p>
+                                                <small class="text-muted">Verified Customer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 7 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"Trust, guarantee, quality paperwork in dealing and credibility in work."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">ع</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Omnia Al Mansour</p>
+                                                <small class="text-muted">Happy Customer</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 8 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm" style="background: white; border-radius: 15px;">
+                                    <div class="card-body p-5 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                            <i class="fas fa-star" style="color: #DAA520;"></i>
+                                        </div>
+                                        <p class="fs-5 fw-bold mb-3" style="color: #222;">"One of the best stores ever... high quality, competitive prices, handling and respect... for customers."</p>
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #DC143C, #8B0000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">م</div>
+                                            <div class="text-start">
+                                                <p class="mb-0 fw-bold">Mahmoud Al-Hasnabi</p>
+                                                <small class="text-muted">Verified Purchase</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carousel Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="prev" style="width: 60px; height: 60px; top: 50%; transform: translateY(-50%); left: -80px; background: #DC143C; border-radius: 50%; border: none; color: white; font-size: 24px;">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="next" style="width: 60px; height: 60px; top: 50%; transform: translateY(-50%); right: -80px; background: #DC143C; border-radius: 50%; border: none; color: white; font-size: 24px;">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dark Mode Testimonials -->
+    <style>
+        html.dark-mode section:has(.carousel) {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%) !important;
+        }
+        html.dark-mode .carousel-item .card {
+            background: #2a2a2a !important;
+            color: #e8e8e8;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+        }
+        html.dark-mode .carousel-item .card p {
+            color: #e8e8e8 !important;
+        }
+        html.dark-mode .carousel-item .card .fw-bold {
+            color: #ffffff !important;
+        }
+        html.dark-mode .carousel-item .text-muted,
+        html.dark-mode .carousel-item small.text-muted {
+            color: #a0a0a0 !important;
+        }
+        html.dark-mode h2 {
+            color: #ffffff !important;
+        }
+        html.dark-mode .text-dark {
+            color: #d0d0d0 !important;
+        }
+        @media (max-width: 768px) {
+            .carousel-control-prev { left: -30px !important; }
+            .carousel-control-next { right: -30px !important; }
+            .carousel-control-prev, .carousel-control-next {
+                width: 45px !important;
+                height: 45px !important;
+                font-size: 18px !important;
+            }
+        }
+    </style>
+
     <!-- Footer -->
     <footer class="footer-custom">
         <div class="container">

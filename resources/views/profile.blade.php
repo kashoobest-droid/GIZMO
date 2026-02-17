@@ -342,10 +342,82 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button class="btn btn-save">{{ __('messages.profile_save') }}</button>
+                        <button type="submit" id="saveBtn" class="btn btn-save">
+                            <span id="btnText">{{ __('messages.profile_save') }}</span>
+                            <span id="btnSpinner" class="d-none ms-2">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </span>
+                        </button>
                         <a href="/" class="btn btn-secondary">{{ __('messages.profile_cancel') }}</a>
                     </div>
                 </form>
+
+                <script>
+                    const profileForm = document.querySelector('form[action="{{ route('profile.update') }}"]');
+                    const saveBtn = document.getElementById('saveBtn');
+                    const btnText = document.getElementById('btnText');
+                    const btnSpinner = document.getElementById('btnSpinner');
+                    const avatarInput = profileForm.querySelector('input[name="avatar"]');
+
+                    // Compress image before upload
+                    avatarInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        // Show file size
+                        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                        if (sizeMB > 5) {
+                            alert(`Image is ${sizeMB}MB. Compressing...`);
+                            compressImage(file);
+                        }
+                    });
+
+                    function compressImage(file) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = function(e) {
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                let width = img.width;
+                                let height = img.height;
+
+                                // Reduce size
+                                if (width > height) {
+                                    if (width > 1200) {
+                                        height = Math.round(height * 1200 / width);
+                                        width = 1200;
+                                    }
+                                } else {
+                                    if (height > 1200) {
+                                        width = Math.round(width * 1200 / height);
+                                        height = 1200;
+                                    }
+                                }
+
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+
+                                canvas.toBlob(function(blob) {
+                                    const dt = new DataTransfer();
+                                    const newFile = new File([blob], file.name, { type: 'image/jpeg' });
+                                    dt.items.add(newFile);
+                                    avatarInput.files = dt.files;
+                                }, 'image/jpeg', 0.8);
+                            };
+                        };
+                    }
+
+                    // Handle form submission
+                    profileForm.addEventListener('submit', function(e) {
+                        saveBtn.disabled = true;
+                        btnText.classList.add('d-none');
+                        btnSpinner.classList.remove('d-none');
+                    });
+                </script>
 
                 <hr class="my-4">
 
