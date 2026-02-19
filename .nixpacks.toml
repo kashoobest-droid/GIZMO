@@ -10,3 +10,7 @@ cmds = [
 
 [start]
 cmd = "php artisan view:clear && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=$PORT"
+
+
+[variables]
+    PHP_EXTENSIONS = "calendar, pdo_mysql, opcache, sodium"
