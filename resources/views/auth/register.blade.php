@@ -185,6 +185,26 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Country</label>
+                    <select id="country_code" class="form-control" style="max-width:160px;" name="country_code" aria-label="Country">
+                        <option value="+249" title="Sudan" {{ old('country_code') == '+249' ? 'selected' : '' }}>🇸🇩 +249</option>
+                        <option value="+20" title="Egypt" {{ old('country_code') == '+20' ? 'selected' : '' }}>🇪🇬 +20</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    <div class="d-flex gap-2">
+                        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="phone_number" class="form-control @error('phone') is-invalid @enderror" name="phone_number" value="{{ old('phone_number') }}" required placeholder="701234567">
+                    </div>
+                    @error('phone')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <input type="hidden" name="phone" id="phone" value="{{ old('phone') }}">
+
+                <div class="form-group">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required placeholder="Min 8 chars, letters, numbers, mixed case">
                     <small class="text-muted" style="font-size:0.8rem;">At least 8 characters, with letters (upper & lower) and numbers</small>
@@ -198,7 +218,7 @@
                     <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required placeholder="Confirm your password">
                 </div>
 
-                <button type="submit" class="btn btn-register">Create Account</button>
+                <button type="submit" id="registerBtn" class="btn btn-register">Create Account</button>
             </form>
 
             <div class="form-footer">
@@ -210,5 +230,27 @@
             <a href="/"><i class="fas fa-arrow-left"></i> Back to Store</a>
         </div>
     </div>
+    <script>
+        (function () {
+            const form = document.querySelector('form[action="{{ route('register.post') }}"]');
+            if (!form) return;
+
+            const phoneInput = document.getElementById('phone_number');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function (e) {
+                    // allow only digits
+                    const digits = this.value.replace(/\D+/g, '');
+                    if (this.value !== digits) this.value = digits;
+                });
+            }
+
+            form.addEventListener('submit', function (e) {
+                const code = document.getElementById('country_code')?.value || '';
+                const number = (document.getElementById('phone_number')?.value || '').replace(/\D+/g, '');
+                const full = code + number;
+                document.getElementById('phone').value = full;
+            });
+        })();
+    </script>
 </body>
 </html>

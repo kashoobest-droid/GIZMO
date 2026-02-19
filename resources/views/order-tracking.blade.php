@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Track Order - Gizmo Store</title>
@@ -117,6 +119,29 @@
         .text-muted {
             color: #666 !important;
         }
+        /* Dark / night mode compatibility (matches main page rules) */
+        html.dark-mode body {
+            background: #0d0d0d !important;
+            color: #e8e8e8 !important;
+        }
+        html.dark-mode .navbar-custom {
+            background: #111 !important;
+        }
+        html.dark-mode .hero-section {
+            background: linear-gradient(135deg,#111 0%,#1a1a1a 100%) !important;
+            color: #e8e8e8 !important;
+        }
+        html.dark-mode .track-card {
+            background: #222 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
+        }
+        html.dark-mode .track-card .card-header {
+            background: linear-gradient(135deg,#0d0d0d 0%,#1a1a1a 100%) !important;
+            border-bottom-color: #8B0000 !important;
+        }
+        html.dark-mode .form-label { color: #e8e8e8 !important; }
+        html.dark-mode .form-control { background: #1d1d1d !important; border-color: #333 !important; color: #e8e8e8 !important; }
+        html.dark-mode .text-muted { color: #a0a0a0 !important; }
     </style>
 </head>
 <body>
@@ -129,9 +154,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
-                    <a class="nav-link" href="{{ route('contact') }}"><i class="fas fa-envelope"></i> Contact</a>
-                    <a class="nav-link" href="{{ route('faq') }}"><i class="fas fa-question-circle"></i> FAQ</a>
+                    <a class="nav-link" href="/"><i class="fas fa-home me-2"></i> Home</a>
+                    <a class="nav-link" href="{{ route('faq') }}"><i class="fas fa-question-circle me-2"></i> FAQ</a>
+                    <a class="nav-link" href="{{ route('contact') }}"><i class="fas fa-envelope me-2"></i> Contact</a>
+                    <a class="nav-link" href="{{ route('order.track.show') }}"><i class="fas fa-map-location-dot me-2"></i> Track Order</a>
                 </div>
             </div>
         </div>

@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <title>Manage Orders - KS Tech Admin</title>
+    <title>Manage Orders - GIZMO Store Admin</title>
     <style>
         * {
             margin: 0;
@@ -24,7 +26,6 @@
         /* Navbar Styling */
         .navbar-custom {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            backdrop-filter: blur(10px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             border-bottom: 2px solid #DC143C;
             padding: 1rem 0;
@@ -34,7 +35,6 @@
             color: #DC143C !important;
             font-weight: 700;
             font-size: 1.4rem;
-            display: flex;
             align-items: center;
             gap: 0.5rem;
         }
@@ -64,7 +64,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 1rem;
         }
 
@@ -186,39 +185,72 @@
             gap: 0.8rem;
         }
 
+        /* Dark, legible orders table */
         .table {
             margin-bottom: 0;
-            font-size: 0.95rem;
-            color: #000000;
+            font-size: 1.02rem; /* slightly larger for readability */
+            color: #e8e8e8;
+            border-collapse: separate;
+            border-spacing: 0 0.6rem;
         }
 
-        .table thead {
-            background: rgba(30, 30, 30, 0.8);
-            border-bottom: 2px solid rgba(220, 20, 60, 0.2);
+        /* make the header row itself dark so it reads as a single bar */
+        .table thead { background: transparent; }
+        .table thead tr {
+            background: linear-gradient(90deg, #0f0f0f 0%, #161616 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
         }
 
         .table thead th {
-            color: #000000;
-            font-weight: 600;
-            padding: 1.2rem 1rem;
+            background: transparent;
+            color: #f1f1f1;
+            font-weight: 700;
+            padding: 1rem 1rem;
             text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
+            font-size: 0.95rem;
+            letter-spacing: 0.6px;
         }
 
         .table tbody tr {
-            border-bottom: 1px solid rgba(255, 153, 0, 0.1);
-            transition: all 0.2s ease;
+            background: linear-gradient(120deg, #0f0f0f 0%, #161616 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .table tbody tr:hover {
-            background-color: rgba(255, 153, 0, 0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.75);
         }
 
         .table tbody td {
             padding: 1.2rem 1rem;
             vertical-align: middle;
-            color: #000000;
+            color: #e8e8e8;
+            font-size: 1rem;
+        }
+
+        /* Make <strong> inside table cells black for emphasis */
+        .table tbody td strong {
+            color: #000000 !important;
+            font-weight: 700;
+        }
+
+        /* Emphasize key cells */
+        .order-id { font-weight: 700; color: #DC143C; font-size: 1.05rem; }
+        .customer-info { font-weight: 700; color: #e8e8e8; font-size: 1.02rem; }
+        .customer-email { color: #bdbdbd; font-size: 0.95rem; }
+
+        /* Highlight Total, Payment, Date cells: bold and black as requested */
+        .table tbody td.col-total,
+        .table tbody td.col-payment,
+        .table tbody td.col-date {
+            color: #000000 !important;
+            font-weight: 700 !important;
+            font-size: 1.02rem;
         }
 
         .order-id {
@@ -386,12 +418,12 @@
             }
 
             .table {
-                font-size: 0.85rem;
+                font-size: 0.95rem;
             }
 
             .table thead th,
             .table tbody td {
-                padding: 0.8rem 0.5rem;
+                padding: 0.8rem 0.6rem;
             }
         }
 
@@ -437,13 +469,22 @@
     <!-- Navbar -->
     <nav class="navbar navbar-custom navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> KS TECH Admin</a>
+            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> GIZMO Store</a>
             <div class="d-flex gap-3 flex-wrap">
                 <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
-                <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
-                <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
-                <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @if(auth()->check() && (method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin() || method_exists(auth()->user(), 'hasAdminScope') && auth()->user()->hasAdminScope('orders')))
+                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
+                @endif
+                @php $u = auth()->user(); @endphp
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('products')))
+                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories')))
+                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('users')))
+                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @endif
                 <a class="nav-link" href="/"><i class="fas fa-store"></i> View Store</a>
             </div>
         </div>
@@ -520,18 +561,20 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th style="width: 8%">Order #</th>
-                            <th style="width: 25%">Customer</th>
-                            <th style="width: 10%">Items</th>
-                            <th style="width: 12%">Total</th>
-                            <th style="width: 15%">Status</th>
-                            <th style="width: 15%">Date</th>
-                            <th style="width: 15%; text-align: center;">Actions</th>
+                            <th style="width: 6%">Order #</th>
+                            <th style="width: 22%">Customer</th>
+                            <th style="width: 8%">Items</th>
+                            <th style="width: 10%">Total</th>
+                            <th style="width: 16%">Payment</th>
+                            <th style="width: 10%">Collected</th>
+                            <th style="width: 12%">Status</th>
+                            <th style="width: 12%">Date</th>
+                            <th style="width: 10%; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($orders as $order)
-                            <tr>
+                                <tr>
                                 <td><span class="order-id">#{{ $order->id }}</span></td>
                                 <td>
                                     <div class="customer-info">{{ $order->user->name }}</div>
@@ -542,7 +585,23 @@
                                         {{ $order->items->count() }} item(s)
                                     </span>
                                 </td>
-                                <td><strong>@currency($order->total)</strong></td>
+                                <td class="col-total"><strong>@currency($order->total)</strong></td>
+                                <td class="col-payment">
+                                    @if($order->payment_method === 'bankak')
+                                        Bankak (BOK) - Bank Transfer
+                                    @elseif($order->payment_method === 'cod')
+                                        Cash on Delivery (COD)
+                                    @else
+                                        {{ ucfirst($order->payment_method ?? 'N/A') }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(is_null($order->payment_received_amount))
+                                        <span class="text-muted">N/A</span>
+                                    @else
+                                        <strong>@currency($order->payment_received_amount)</strong>
+                                    @endif
+                                </td>
                                 <td>
                                     <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-inline">
                                         @csrf
@@ -566,11 +625,34 @@
                                         </select>
                                     </form>
                                 </td>
-                                <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
+                                <td class="col-date">{{ $order->created_at->format('M d, Y H:i') }}</td>
                                 <td style="text-align: center;">
                                     <a href="{{ route('orders.show', $order) }}" class="btn-view">
                                         <i class="fas fa-eye"></i> View
                                     </a>
+
+                                    @if($order->payment_method === 'bankak')
+                                        <div class="mt-2">
+                                            <small class="text-muted">Txn: {{ $order->transaction_id ?? '—' }}</small><br>
+                                            @if($order->receipt_path)
+                                                @php
+                                                    $receiptUrl = $order->receipt_path;
+                                                    // If receipt_path is not a full URL, assume it's a local storage path
+                                                    if (! (str_starts_with($receiptUrl, 'http://') || str_starts_with($receiptUrl, 'https://'))) {
+                                                        $receiptUrl = asset('storage/' . ltrim($receiptUrl, '/'));
+                                                    }
+                                                @endphp
+                                                <a href="{{ $receiptUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary mt-1">View Receipt</a>
+                                            @endif
+                                        </div>
+
+                                        @if($order->payment_status === 'awaiting_admin_approval')
+                                            <div class="d-flex gap-2 justify-content-center mt-2">
+                                                <button type="button" class="btn btn-sm btn-success js-admin-action-btn" data-action="{{ route('admin.orders.approvePayment', $order) }}" data-order-id="{{ $order->id }}" data-action-label="APPROVE">Approve</button>
+                                                <button type="button" class="btn btn-sm btn-danger js-admin-action-btn" data-action="{{ route('admin.orders.rejectPayment', $order) }}" data-order-id="{{ $order->id }}" data-action-label="REJECT">Reject</button>
+                                            </div>
+                                        @endif
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -700,3 +782,127 @@
             }
         });
     </script>
+        <!-- Admin action confirmation modal (Approve) -->
+        <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%); color: #fff; border-bottom: 4px solid #DC143C;">
+                        <h5 class="modal-title" id="confirmActionModalLabel">Confirm Action</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirmActionMessage" class="mb-0"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmActionBtn" class="btn btn-danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reject payment modal with reason dropdown -->
+        <div class="modal fade" id="rejectPaymentModal" tabindex="-1" aria-labelledby="rejectPaymentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="rejectPaymentForm" method="POST" action="">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%); color: #fff; border-bottom: 4px solid #DC143C;">
+                            <h5 class="modal-title" id="rejectPaymentModalLabel">Reject Payment</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @csrf
+                            <p>Select the reason for rejecting this payment. This reason will be included in the rejection email sent to the customer.</p>
+                            <div class="mb-3">
+                                <label for="rejectReason" class="form-label">Rejection Reason</label>
+                                <select id="rejectReason" name="reason" class="form-select" required>
+                                    <option value="">-- Choose a reason --</option>
+                                    <option>Transaction ID not found in bank records.</option>
+                                    <option>Screenshot is blurry or unreadable.</option>
+                                    <option>Amount transferred does not match order total.</option>
+                                    <option>Duplicate Transaction ID (already used for another order).</option>
+                                    <option>Other - see details below</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="rejectReasonDetails" class="form-label">Additional details (optional)</label>
+                                <textarea id="rejectReasonDetails" name="reason_details" class="form-control" rows="3" placeholder="Optional details to include with the reason..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Reject Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <form id="adminActionForm" method="POST" style="display:none;">
+            @csrf
+        </form>
+
+        <script>
+            (function(){
+                const confirmEl = document.getElementById('confirmActionModal');
+                const bsConfirm = new bootstrap.Modal(confirmEl, { backdrop: 'static' });
+
+                const rejectEl = document.getElementById('rejectPaymentModal');
+                const bsReject = new bootstrap.Modal(rejectEl, { backdrop: 'static' });
+
+                let pendingActionUrl = null;
+                let pendingOrderId = null;
+
+                document.querySelectorAll('.js-admin-action-btn').forEach(btn => {
+                    btn.addEventListener('click', function(){
+                        pendingActionUrl = this.getAttribute('data-action');
+                        pendingOrderId = this.getAttribute('data-order-id');
+                        const label = this.getAttribute('data-action-label') || 'CONFIRM';
+
+                        if (label === 'REJECT') {
+                            // Open reject modal and set form action
+                            const form = document.getElementById('rejectPaymentForm');
+                            form.action = pendingActionUrl;
+                            // clear previous selections
+                            document.getElementById('rejectReason').value = '';
+                            document.getElementById('rejectReasonDetails').value = '';
+                            bsReject.show();
+                            return;
+                        }
+
+                        const message = `Are you sure you want to <strong>${label}</strong> order #${pendingOrderId}?`;
+                        document.getElementById('confirmActionMessage').innerHTML = message;
+                        const confirmBtn = document.getElementById('confirmActionBtn');
+                        confirmBtn.className = label === 'APPROVE' ? 'btn btn-success' : 'btn btn-danger';
+                        confirmBtn.innerText = label;
+                        bsConfirm.show();
+                    });
+                });
+
+                document.getElementById('confirmActionBtn').addEventListener('click', function(){
+                    if (!pendingActionUrl) return;
+                    const form = document.getElementById('adminActionForm');
+                    form.action = pendingActionUrl;
+                    form.submit();
+                });
+
+                // When reject form is submitted, combine select + details into a single reason string
+                document.getElementById('rejectPaymentForm').addEventListener('submit', function(e){
+                    const select = document.getElementById('rejectReason');
+                    const details = document.getElementById('rejectReasonDetails').value.trim();
+                    if (!select.value) {
+                        e.preventDefault();
+                        alert('Please select a rejection reason.');
+                        return;
+                    }
+                    // create a hidden input carrying the merged reason
+                    let reasonText = select.value;
+                    if (details) reasonText = reasonText + ' — ' + details;
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'reason';
+                    hidden.value = reasonText;
+                    this.appendChild(hidden);
+                });
+            })();
+        </script>

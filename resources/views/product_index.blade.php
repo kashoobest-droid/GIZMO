@@ -371,55 +371,26 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
+    <!-- Navbar (match admin/orders style) -->
+    <nav class="navbar navbar-custom navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-power-off"></i> GIZMO SD
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
-                    </li>
-                    @php use Illuminate\Support\Facades\Auth; @endphp
-                    @if(Auth::check())
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle"></i> {{ Auth::user()->name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> Profile</a></li>
-                                @if(Auth::user()->is_admin)
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ route('product.index') }}"><i class="fas fa-boxes"></i> Manage Products</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Manage Categories</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('users.index') }}"><i class="fas fa-users-cog"></i> Manage Users</a></li>
-                                @endif
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item" style="border: none; background: none; cursor: pointer;">
-                                            <i class="fas fa-sign-out-alt"></i> Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    @else
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}"><i class="fas fa-user-plus"></i> Sign Up</a>
-                        </li>
-                    @endif
-                </ul>
+            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> GIZMO SD</a>
+            <div class="d-flex gap-3 flex-wrap">
+                <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                @if(auth()->check() && (method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin() || method_exists(auth()->user(), 'hasAdminScope') && auth()->user()->hasAdminScope('orders')))
+                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
+                @endif
+                @php $u = auth()->user(); @endphp
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('products')))
+                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories')))
+                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('users')))
+                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @endif
+                <a class="nav-link" href="/"><i class="fas fa-store"></i> View Store</a>
             </div>
         </div>
     </nav>
@@ -431,7 +402,9 @@
                 <i class="fas fa-boxes"></i>
                 Manage Products
             </h1>
-            <a href="{{ route('product.create') }}" class="btn-add"><i class="fas fa-plus"></i> Add Product</a>
+            @if(Auth::check() && (method_exists(Auth::user(), 'isMasterAdmin') && Auth::user()->isMasterAdmin() || method_exists(Auth::user(), 'hasAdminScope') && Auth::user()->hasAdminScope('products')))
+                <a href="{{ route('product.create') }}" class="btn-add"><i class="fas fa-plus"></i> Add Product</a>
+            @endif
         </div>
 
         @if($products->count() > 0)
@@ -484,18 +457,22 @@
                             @if($product->offer)
                                 <div class="product-offer">
                                     <i class="fas fa-gift"></i> {{ $product->offer->offer_name ?? $product->offer->gift_name }}
-                                    <a href="{{ route('offer.edit', $product->offer) }}"><small>[Edit]</small></a>
+                                    @if(Auth::check() && (method_exists(Auth::user(), 'isMasterAdmin') && Auth::user()->isMasterAdmin() || method_exists(Auth::user(), 'hasAdminScope') && Auth::user()->hasAdminScope('products')))
+                                        <a href="{{ route('offer.edit', $product->offer) }}"><small>[Edit]</small></a>
+                                    @endif
                                 </div>
                             @endif
 
-                            <div class="product-footer">
-                                <a href="{{ route('product.edit', $product->id) }}" class="btn-edit"><i class="fas fa-edit"></i> Edit</a>
-                                <form action="{{ route('product.destroy', $product->id) }}" method="POST" style="flex: 1;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this product?');"><i class="fas fa-trash"></i> Delete</button>
-                                </form>
-                            </div>
+                            @if(Auth::check() && (method_exists(Auth::user(), 'isMasterAdmin') && Auth::user()->isMasterAdmin() || method_exists(Auth::user(), 'hasAdminScope') && Auth::user()->hasAdminScope('products')))
+                                <div class="product-footer">
+                                    <a href="{{ route('product.edit', $product->id) }}" class="btn-edit"><i class="fas fa-edit"></i> Edit</a>
+                                    <form action="{{ route('product.destroy', $product->id) }}" method="POST" style="flex: 1;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-delete confirmable-btn" data-confirm="Are you sure you want to delete this product?"><i class="fas fa-trash"></i> Delete</button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -505,7 +482,9 @@
                 <i class="fas fa-box-open"></i>
                 <h3>No Products Found</h3>
                 <p>Start by adding a new product to your inventory.</p>
-                <a href="{{ route('product.create') }}" class="btn-add" style="margin-top: 1rem;"><i class="fas fa-plus"></i> Add Your First Product</a>
+                @if(Auth::check() && (method_exists(Auth::user(), 'isMasterAdmin') && Auth::user()->isMasterAdmin() || method_exists(Auth::user(), 'hasAdminScope') && Auth::user()->hasAdminScope('products')))
+                    <a href="{{ route('product.create') }}" class="btn-add" style="margin-top: 1rem;"><i class="fas fa-plus"></i> Add Your First Product</a>
+                @endif
             </div>
         @endif
     </div>

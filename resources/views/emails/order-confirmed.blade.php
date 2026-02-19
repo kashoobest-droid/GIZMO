@@ -46,29 +46,12 @@
         <div class="content">
             <div class="greeting">
                 <p>Hi {{ $order->user->name }},</p>
-                <p>Thank you for your order! We've received it and are processing it right away. Here are your order details:</p>
+                @if($order->payment_method === 'bankak')
+                    <p style="background:#fff3cd;border-left:4px solid #DC143C;padding:10px;border-radius:4px;color:#856404;margin-bottom:12px;">Your payment was received as Bankak transfer and is currently pending review. We're working to approve your payment — you'll receive another email when it's approved.</p>
+                @else
+                    <p>Thank you for your order! We've received it and are processing it right away. Here are your order details:</p>
+                @endif
             </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($order->items as $item)
-                    <tr>
-                        <td>{{ $item->product_name }}</td>
-                        <td>{{ $item->quantity }}</td>
-                        <td>@currency($item->price)</td>
-                        <td>@currency($item->subtotal)</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
 
             <div class="total">
                 Total Amount: @currency($order->total)
@@ -82,7 +65,9 @@
             </div>
             @endif
 
-            <p>Your order is being prepared and packed with care. You'll receive a shipping notification with tracking details as soon as your order leaves our warehouse.</p>
+            @if($order->payment_method !== 'bankak')
+                <p>Your order is being prepared and packed with care. You'll receive a shipping notification with tracking details as soon as your order leaves our warehouse.</p>
+            @endif
 
             <div class="button-wrapper">
                 <a href="{{ config('app.url') }}/orders/{{ $order->id }}" class="cta-button">Track Your Order</a>

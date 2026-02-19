@@ -279,6 +279,65 @@
             }
         });
     </script>
+    <!-- Toast container and AJAX add-to-cart -->
+    <div id="toastContainer" style="position: fixed; top: 1rem; right: 1rem; z-index: 1080;"></div>
+    <script>
+        (function(){
+            function showToast(message, success = true){
+                var id = 'toast-' + Date.now();
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+                    <div id="${id}" class="toast align-items-center text-bg-${success ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>`;
+                var el = wrapper.firstElementChild;
+                document.getElementById('toastContainer').appendChild(el);
+                var bsToast = new bootstrap.Toast(el, { delay: 3000 });
+                bsToast.show();
+                el.addEventListener('hidden.bs.toast', function(){ el.remove(); });
+            }
+
+            document.querySelectorAll('form.add-to-cart-form').forEach(function(form){
+                form.addEventListener('submit', function(e){
+                    // Allow normal submit when JS disabled
+                    e.preventDefault();
+                    var submitBtn = form.querySelector('.add-to-cart-button');
+                    if(!submitBtn) submitBtn = form.querySelector('button[type="submit"]');
+
+                    var url = form.getAttribute('action');
+                    var data = new FormData(form);
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: data,
+                        credentials: 'same-origin'
+                    }).then(function(resp){
+                        if(!resp.ok) return resp.text().then(function(t){ throw new Error(t || 'Network error'); });
+                        return resp.json();
+                    }).then(function(json){
+                        var msg = json && json.message ? json.message : 'Product added to cart!';
+                        showToast(msg, true);
+                        if(submitBtn){
+                            submitBtn.disabled = true;
+                            submitBtn.classList.remove('btn-warning');
+                            submitBtn.classList.add('btn-success');
+                            submitBtn.innerHTML = '<i class="fas fa-check"></i> In Cart';
+                        }
+                    }).catch(function(err){
+                        var text = (err && err.message) ? err.message : 'Failed to add to cart';
+                        showToast(text, false);
+                    });
+                });
+            });
+        })();
+    </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
@@ -358,9 +417,9 @@
                             @if($product->quantity < 1)
                                 <button type="button" class="btn btn-secondary btn-lg flex-grow-1" disabled><i class="fas fa-times-circle"></i> {{ __('messages.out_of_stock') }}</button>
                             @else
-                            <form action="{{ route('cart.add', $product) }}" method="POST" class="flex-grow-1">
+                            <form action="{{ route('cart.add', $product) }}" method="POST" class="flex-grow-1 add-to-cart-form" data-product-id="{{ $product->id }}">
                                 @csrf
-                                <button type="submit" class="btn btn-warning btn-lg w-100"><i class="fas fa-shopping-cart"></i> {{ __('messages.add_to_cart') }}</button>
+                                <button type="submit" class="btn btn-warning btn-lg w-100 add-to-cart-button"><i class="fas fa-shopping-cart"></i> {{ __('messages.add_to_cart') }}</button>
                             </form>
                             @endif
                             <form action="{{ route('favorites.toggle', $product) }}" method="POST">
@@ -490,7 +549,7 @@
                             @if(auth()->check() && auth()->user()->id === $review->user_id)
                                 <div class="review-actions">
                                     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editReviewModal{{ $review->id }}" title="Edit review"><i class="fas fa-edit"></i></button>
-                                    <form action="{{ route('review.destroy', $review) }}" method="POST" style="display: inline;" onsubmit="return confirm('{{ __('messages.product_delete_confirm') }}');">
+                                    <form action="{{ route('review.destroy', $review) }}" method="POST" style="display: inline;" class="confirmable-form" data-confirm="{{ __('messages.product_delete_confirm') }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete review"><i class="fas fa-trash"></i></button>

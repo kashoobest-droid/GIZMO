@@ -61,7 +61,7 @@
         }
 
         .dropdown-item.orders-link {
-            color: #1a1a1a !important;
+            color: #ffffff !important;
         }
 
         .dropdown-item.orders-link i {
@@ -73,7 +73,14 @@
         }
 
         .dropdown-item.orders-link:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(255,255,255,0.06);
+        }
+        /* User dropdown link color (light-mode default, dark-mode override) */
+        .nav-user-dropdown .dropdown-item {
+            color: var(--color-text) !important;
+        }
+        html.dark-mode .nav-user-dropdown .dropdown-item {
+            color: #ffffff !important;
         }
         /* Mobile responsive navbar */
         .navbar-toggler { border: 1px solid #ffffff !important; }
@@ -729,7 +736,7 @@
             --color-hero-gradient-1: #4a5a8a;
             --color-hero-gradient-2: #5a3a82;
             --color-hero-text: #ffffff;
-            --color-primary: #FF8A8A;
+            --color-primary: #DC143C;
             --color-primary-hover: #DC143C;
             --color-success: #26a745;
             --color-success-hover: #1e8e37;
@@ -1070,7 +1077,7 @@
 
         html.dark-mode .lang-option:hover {
             background: #3a3a3a;
-            color: #FF8A8A;
+            color: #DC143C;
         }        .lang-option.active {
             background: var(--color-hero-gradient-1);
             color: white;
@@ -1385,17 +1392,36 @@
                                 @endif
                                 <span>{{ Auth::user()->name }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <ul class="dropdown-menu dropdown-menu-end nav-user-dropdown" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> {{ __('messages.nav_profile') }}</a></li>
-                                <li><a class="dropdown-item orders-link" href="{{ route('orders.index') }}"><i class="fas fa-box-open"></i> {{ __('messages.nav_orders') }}</a></li>
-                                @if(Auth::user()->is_admin)
+                                <li><a class="dropdown-item orders-link" href="{{ route('orders.index') }}"><i class="fas fa-box-open"></i> My Orders</a></li>
+                                @php $u = Auth::user(); @endphp
+                                @if((method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()) || (method_exists($u, 'hasAdminScope') && (
+                                    $u->hasAdminScope('orders') ||
+                                    $u->hasAdminScope('products') ||
+                                    $u->hasAdminScope('categories') ||
+                                    $u->hasAdminScope('coupons') ||
+                                    $u->hasAdminScope('users')
+                                )))
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> {{ __('messages.nav_dashboard') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> {{ __('messages.nav_manage_orders') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('product.index') }}"><i class="fas fa-boxes"></i> {{ __('messages.nav_manage_products') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('category.index') }}"><i class="fas fa-list"></i> {{ __('messages.nav_manage_categories') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('admin.coupons.index') }}"><i class="fas fa-tag"></i> {{ __('messages.nav_coupons') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('users.index') }}"><i class="fas fa-users-cog"></i> {{ __('messages.nav_manage_users') }}</a></li>
+                                    @if(method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin())
+                                        <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> {{ __('messages.nav_dashboard') }}</a></li>
+                                    @endif
+                                    @if((method_exists($u, 'hasAdminScope') && $u->hasAdminScope('orders')) || (method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()))
+                                        <li><a class="dropdown-item" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> {{ __('messages.nav_manage_orders') }}</a></li>
+                                    @endif
+                                    @if((method_exists($u, 'hasAdminScope') && $u->hasAdminScope('products')) || (method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()))
+                                        <li><a class="dropdown-item" href="{{ route('product.index') }}"><i class="fas fa-boxes"></i> {{ __('messages.nav_manage_products') }}</a></li>
+                                    @endif
+                                    @if((method_exists($u, 'hasAdminScope') && $u->hasAdminScope('categories')) || (method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()))
+                                        <li><a class="dropdown-item" href="{{ route('category.index') }}"><i class="fas fa-list"></i> {{ __('messages.nav_manage_categories') }}</a></li>
+                                    @endif
+                                    @if((method_exists($u, 'hasAdminScope') && $u->hasAdminScope('coupons')) || (method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()))
+                                        <li><a class="dropdown-item" href="{{ route('admin.coupons.index') }}"><i class="fas fa-tag"></i> {{ __('messages.nav_coupons') }}</a></li>
+                                    @endif
+                                    @if((method_exists($u, 'hasAdminScope') && $u->hasAdminScope('users')) || (method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin()))
+                                        <li><a class="dropdown-item" href="{{ route('users.index') }}"><i class="fas fa-users-cog"></i> {{ __('messages.nav_manage_users') }}</a></li>
+                                    @endif
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
@@ -2073,5 +2099,79 @@
     <a href="{{ route('contact') }}" class="floating-contact-btn" title="{{ __('messages.contact_us') }}" aria-label="Contact Us">
         <i class="fas fa-envelope"></i>
     </a>
+    
+    <!-- Confirmation Modal (styled to match /cart) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cart-card">
+                <div class="modal-body py-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="font-size:1.6rem;color:#DC143C;line-height:1;"><i class="fas fa-exclamation-circle"></i></div>
+                        <div>
+                            <h5 class="mb-1" id="confirmModalTitle">Are you sure?</h5>
+                            <p id="confirmModalMessage" class="mb-0 text-muted">This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmModalConfirmBtn" class="btn btn-warning">Yes, remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            var confirmModalEl = document.getElementById('confirmModal');
+            if(!confirmModalEl) return;
+            var bsConfirmModal = new bootstrap.Modal(confirmModalEl);
+            var confirmMessageEl = document.getElementById('confirmModalMessage');
+            var confirmBtn = document.getElementById('confirmModalConfirmBtn');
+            var pendingCallback = null;
+
+            function showConfirm(message, onConfirm){
+                pendingCallback = onConfirm;
+                confirmMessageEl.textContent = message || 'Are you sure?';
+                bsConfirmModal.show();
+            }
+
+            confirmBtn.addEventListener('click', function(){
+                bsConfirmModal.hide();
+                if(typeof pendingCallback === 'function'){
+                    // small timeout to allow modal hide animation
+                    setTimeout(function(){ pendingCallback(); pendingCallback = null; }, 120);
+                }
+            });
+
+            // Intercept forms with data-confirm
+            document.querySelectorAll('form.confirmable-form, form[data-confirm]').forEach(function(form){
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    var msg = form.getAttribute('data-confirm') || form.dataset.confirm || 'Are you sure?';
+                    document.getElementById('confirmModalTitle').textContent = 'Please confirm';
+                    showConfirm(msg, function(){ form.submit(); });
+                });
+            });
+
+            // Intercept buttons with data-confirm inside forms (e.g., delete buttons)
+            document.querySelectorAll('button.confirmable-btn[data-confirm], a.confirmable-btn[data-confirm]').forEach(function(btn){
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var msg = btn.getAttribute('data-confirm') || btn.dataset.confirm || 'Are you sure?';
+                    var form = btn.closest('form');
+                    document.getElementById('confirmModalTitle').textContent = 'Please confirm';
+                    showConfirm(msg, function(){
+                        if(form) form.submit();
+                        else {
+                            // fallback: follow href for anchors
+                            var href = btn.getAttribute('href');
+                            if(href) window.location.href = href;
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

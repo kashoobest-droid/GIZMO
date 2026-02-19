@@ -3,152 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="/css/gizmo_sudan.css">
     <title>Checkout - Gizmo Store</title>
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --border-color: #ddd;
-        }
+<style>
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-primary: #1a1a1a;
+        --text-secondary: #666666;
+        --border-color: #dee2e6;
+        --accent-color: #DC143C;
+    }
 
-        html.dark-mode {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2a2a2a;
-            --text-primary: #e8e8e8;
-            --text-secondary: #a0a0a0;
-            --border-color: #3a3a3a;
-        }
+    html.dark-mode {
+        --bg-primary: #121212;
+        --bg-secondary: #1d1d1d;
+        --card-bg: #242424;
+        --text-primary: #e8e8e8;
+        --text-secondary: #a0a0a0;
+        --border-color: #3a3a3a;
+    }
 
-        body {
-            background-color: var(--bg-secondary);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
-            color: var(--text-primary);
-            transition: background-color 0.3s, color 0.3s;
-        }
+    body {
+        background-color: var(--bg-secondary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: var(--text-primary);
+        transition: background-color 0.3s, color 0.3s;
+    }
 
-        .navbar-custom {
-            background-color: var(--bg-primary);
-            border-bottom: 3px solid #DC143C;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+    /* Navbar fixes */
+    .navbar-custom {
+        background-color: var(--bg-primary);
+        border-bottom: 3px solid var(--accent-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 0.75rem 0;
+    }
 
-        .navbar-custom .navbar-brand {
-            color: #DC143C !important;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
+    .nav-link {
+        color: var(--text-primary) !important;
+        font-weight: 500;
+    }
 
-        .navbar-custom .nav-link {
-            color: var(--text-primary) !important;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.3s;
-        }
+    /* Missing Component Styles */
+    .checkout-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
 
-        .navbar-custom .nav-link:hover {
-            color: #DC143C !important;
-        }
+    .cart-item-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
 
-        .navbar-custom .nav-link i {
-            font-size: 1.1rem;
-        }
+    .btn-place-order {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 12px;
+        font-weight: 700;
+        border-radius: 8px;
+        transition: transform 0.2s, background-color 0.2s;
+    }
 
-        .mode-toggle {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 1.3rem;
-            padding: 0.5rem 1rem;
-            transition: color 0.3s;
-        }
+    .btn-place-order:hover {
+        background-color: #b01030;
+        color: white;
+        transform: translateY(-1px);
+    }
 
-        .mode-toggle:hover {
-            color: #DC143C;
-        }
+    /* Dark Mode Toggle Button */
+    .mode-toggle {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
 
-        .checkout-card {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            color: var(--text-primary);
-        }
+    /* Form Overrides for Dark Mode */
+    .form-control, .form-select, .input-group-text {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
 
-        .cart-item-img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
+    .form-control:focus {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
 
-        .btn-place-order {
-            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 12px;
-            transition: all 0.3s;
-        }
+    .form-check-input:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
 
-        .btn-place-order:hover {
-            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
-            color: white;
-            box-shadow: 0 4px 8px rgba(220, 20, 60, 0.3);
-        }
-
-        .btn-outline-secondary {
-            color: var(--text-primary);
-            border-color: var(--border-color);
-        }
-
-        .btn-outline-secondary:hover {
-            background-color: #DC143C;
-            border-color: #DC143C;
-            color: white;
-        }
-
-        .text-muted {
-            color: var(--text-secondary) !important;
-        }
-
-        .border-bottom {
-            border-color: var(--border-color) !important;
-        }
-
-        h2, h5 {
-            color: var(--text-primary) !important;
-        }
-
-        .form-label, .form-control, textarea {
-            color: var(--text-primary);
-            background-color: var(--bg-secondary);
-            border-color: var(--border-color);
-        }
-
-        .form-control:focus, textarea:focus {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            border-color: #DC143C;
-            box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
-        }
-
-        .alert {
-            border-color: var(--border-color);
-        }
-
-        hr {
-            border-color: var(--border-color);
-        }
-    </style>
+    .text-muted { color: var(--text-secondary) !important; }
+    hr { border-top-color: var(--border-color); opacity: 1; }
+</style>
 </head>
 <body>
     <!-- Navigation -->
@@ -181,19 +148,82 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        <div class="row">
+        <form action="{{ route('orders.store') }}" method="POST" id="checkoutForm" enctype="multipart/form-data">
+            @csrf
+            <div class="row">
             <div class="col-lg-8">
                 <div class="checkout-card p-4 mb-4">
                     <h5 class="mb-3"><i class="fas fa-map-marker-alt" style="color: #DC143C;"></i> Shipping Address</h5>
-                    <p class="text-muted mb-0">{{ auth()->user()->formatShippingAddress() }}</p>
-                    @if(auth()->user()->phone)
-                        <p class="mb-0 mt-2"><i class="fas fa-phone" style="color: #DC143C;"></i> {{ auth()->user()->phone }}</p>
+                    @if(!empty($needsAddress) && $needsAddress)
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> Shipping Address is required. Please provide your address below to continue.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Country</label>
+                            <input type="text" name="country" class="form-control" value="{{ old('country', auth()->user()->country) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Street</label>
+                            <input type="text" name="street_name" class="form-control" value="{{ old('street_name', auth()->user()->street_name) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Building / Villa</label>
+                            <input type="text" name="building_name" class="form-control" value="{{ old('building_name', auth()->user()->building_name) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Floor / Apartment <small class="text-muted">(optional)</small></label>
+                            <input type="text" name="floor_apartment" class="form-control" value="{{ old('floor_apartment', auth()->user()->floor_apartment) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Landmark <small class="text-muted">(optional)</small></label>
+                            <input type="text" name="landmark" class="form-control" value="{{ old('landmark', auth()->user()->landmark) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">City / Area</label>
+                            <input type="text" name="city_area" class="form-control" value="{{ old('city_area', auth()->user()->city_area) }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" id="address_phone" name="phone" class="form-control" value="{{ old('phone', auth()->user()->phone) }}">
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" id="saveAddressBtn" class="btn btn-primary">Save Address</button>
+                        </div>
+                    @else
+                        <p class="text-muted mb-0">{{ auth()->user()->formatShippingAddress() }}</p>
+                        @if(auth()->user()->phone)
+                            <p class="mb-0 mt-2"><i class="fas fa-phone" style="color: #DC143C;"></i> {{ auth()->user()->phone }}</p>
+                        @endif
+                        <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-outline-secondary mt-3">
+                            <i class="fas fa-edit me-1"></i> Update Address
+                        </a>
                     @endif
-                    <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-outline-secondary mt-3">
-                        <i class="fas fa-edit me-1"></i> Update Address
-                    </a>
                 </div>
+
+                @if(! auth()->user()->phone)
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Please make sure your phone number is available in your profile before placing an order.
+                        <a href="{{ route('profile.edit') }}" class="ms-2">Update profile</a>
+                    </div>
+                @endif
 
                 <div class="checkout-card p-4">
                     <h5 class="mb-3"><i class="fas fa-box" style="color: #DC143C;"></i> Order Items</h5>
@@ -232,8 +262,7 @@
                         <span class="fw-bold fs-5" style="color: #DC143C;">@currency($total ?? $subtotal)</span>
                     </p>
                     <hr>
-                    <form action="{{ route('orders.store') }}" method="POST" id="checkoutForm">
-                        @csrf
+                    
                         <div class="mb-3">
                             <label class="form-label small"><i class="fas fa-tag me-1"></i>Coupon code (optional)</label>
                             <div class="input-group input-group-sm">
@@ -241,6 +270,42 @@
                             </div>
                             <p class="small text-muted mb-0 mt-1">Enter your code and place order to apply.</p>
                         </div>
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label small"><i class="fas fa-credit-card me-1"></i> Payment Method</label>
+                                @php
+                                    $city = strtolower(trim(auth()->user()->city_area ?? ''));
+                                    $codAvailable = (strpos($city, 'port') !== false) || (strpos($city, 'port sudan') !== false) || (strpos($city, 'portsudan') !== false);
+                                @endphp
+                                <div class="d-flex flex-column">
+                                    <!-- Card (online) temporarily disabled -->
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="pm_bankak" value="bankak" {{ old('payment_method', 'bankak') === 'bankak' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="pm_bankak"><img src="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771513567/bok_zmc15z.png" alt="BOK" style="height:20px; margin-right:8px; vertical-align:middle;">Bankak (BOK) - Bank Transfer</label>
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="pm_cod" value="cod" {{ old('payment_method') === 'cod' ? 'checked' : '' }} {{ $codAvailable ? '' : 'disabled' }}>
+                                        <label class="form-check-label" for="pm_cod">Cash on Delivery (COD) @if(! $codAvailable) <small class="text-muted">(Only Port Sudan)</small> @endif</label>
+                                    </div>
+                                    @error('payment_method')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+
+                            <div id="bankakFields" style="display:none;">
+                                <div class="alert alert-light">Please transfer to: <strong>{{ env('BOK_ACCOUNT_NUMBER', 'BOK-ACCOUNT-XXXXXXXX') }}</strong> ({{ env('BOK_ACCOUNT_NAME', 'GIZMO Store') }}). In the transfer note include your Order reference.</div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Bankak Transaction ID</label>
+                                    <input type="text" name="transaction_id" class="form-control @error('transaction_id') is-invalid @enderror" value="{{ old('transaction_id') }}">
+                                    @error('transaction_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Upload Transfer Screenshot</label>
+                                    <input type="file" name="receipt" accept="image/*" class="form-control @error('receipt') is-invalid @enderror">
+                                    @error('receipt')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
                         <div class="mb-3">
                             <label class="form-label small"><i class="fas fa-pen me-1"></i>Order notes (optional)</label>
                             <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Special instructions..."></textarea>
@@ -248,13 +313,14 @@
                         <button type="submit" class="btn btn-place-order w-100">
                             <i class="fas fa-lock me-2"></i> Place Order
                         </button>
-                    </form>
+                    
                     <a href="{{ route('cart.index') }}" class="btn btn-outline-secondary w-100 mt-2">
                         <i class="fas fa-arrow-left me-2"></i> Back to Cart
                     </a>
                 </div>
             </div>
-        </div>
+            </div>
+        </form>
     </div>
 
     <!-- Dark Mode Script -->
@@ -293,7 +359,21 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', initializeDarkMode);
     </script>
-</body>
-</html>
+    <script>
+        // Payment method toggle logic
+        function updatePaymentFields() {
+            const bankakFields = document.getElementById('bankakFields');
+            const pmBankak = document.getElementById('pm_bankak');
+            if (!bankakFields || !pmBankak) return;
+            bankakFields.style.display = pmBankak.checked ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const radios = document.querySelectorAll('input[name="payment_method"]');
+            radios.forEach(r => r.addEventListener('change', updatePaymentFields));
+            updatePaymentFields();
+        });
+    </script>
+    
 </body>
 </html>

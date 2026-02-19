@@ -33,4 +33,5 @@ class OrderConfirmed extends Mailable implements ShouldQueue
             view: 'emails.order-confirmed',
         );
     }
+
 }

@@ -374,7 +374,7 @@
                                     <a href="{{ route('category.edit', $category->id) }}" class="btn btn-action btn-edit">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ route('category.destroy', $category->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                    <form action="{{ route('category.destroy', $category->id) }}" method="POST" style="display:inline-block;" class="confirmable-form" data-confirm="Are you sure you want to delete this category?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-action btn-delete">

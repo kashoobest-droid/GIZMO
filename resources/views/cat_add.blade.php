@@ -223,9 +223,24 @@
                             <i class="fas fa-cog"></i> Admin
                         </a>
                         <ul class="dropdown-menu" style="background-color: #1a1a1a; border-color: #DC143C;">
-                            <li><a class="dropdown-item" href="{{ route('product.index') }}" style="color: #e0e0e0;">Manage Products</a></li>
-                            <li><a class="dropdown-item" href="{{ route('category.index') }}" style="color: #e0e0e0;">Manage Categories</a></li>
-                            <li><a class="dropdown-item" href="{{ route('users.index') }}" style="color: #e0e0e0;">Manage Users</a></li>
+                            @if(auth()->check())
+                                @php $u = auth()->user(); @endphp
+                                @if(method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin())
+                                    <li><a class="dropdown-item" href="{{ route('product.index') }}" style="color: #e0e0e0;">Manage Products</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('category.index') }}" style="color: #e0e0e0;">Manage Categories</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('users.index') }}" style="color: #e0e0e0;">Manage Users</a></li>
+                                @else
+                                    @if(method_exists($u,'hasAdminScope') && $u->hasAdminScope('products'))
+                                        <li><a class="dropdown-item" href="{{ route('product.index') }}" style="color: #e0e0e0;">Manage Products</a></li>
+                                    @endif
+                                    @if(method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories'))
+                                        <li><a class="dropdown-item" href="{{ route('category.index') }}" style="color: #e0e0e0;">Manage Categories</a></li>
+                                    @endif
+                                    @if(method_exists($u,'hasAdminScope') && $u->hasAdminScope('users'))
+                                        <li><a class="dropdown-item" href="{{ route('users.index') }}" style="color: #e0e0e0;">Manage Users</a></li>
+                                    @endif
+                                @endif
+                            @endif
                         </ul>
                     </li>
                 </ul>

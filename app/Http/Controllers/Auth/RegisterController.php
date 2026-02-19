@@ -21,6 +21,7 @@ class RegisterController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|unique:users,phone',
             'password' => [
                 'required',
                 'confirmed',
@@ -31,13 +32,28 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'is_admin' => false,
         ]);
 
+        // Generate an OTP verification record for the phone
+        try {
+            \App\Models\Verification::create([
+                'phone' => $validated['phone'],
+                'code' => rand(100000, 999999),
+                'expires_at' => now()->addMinutes(10),
+                'attempts' => 0,
+            ]);
+        } catch (\Throwable $e) {
+            // don't block registration on OTP persistence failure; log and continue
+            \Log::error('Failed to create verification record: ' . $e->getMessage());
+        }
+
+        // Log in the user but require phone verification before accessing account
         Auth::login($user);
 
-        return redirect('/')->with('success', 'Account created and logged in successfully!');
+        return redirect()->route('verify.show')->with('phone', $validated['phone']);
     }
 }
 

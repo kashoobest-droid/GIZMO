@@ -135,7 +135,8 @@
                     <i class="fas fa-box-open"></i> My Orders
                 </a>
                 @auth
-                    @if(auth()->user()->is_admin)
+                    @php $u = auth()->user(); @endphp
+                    @if(method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u, 'hasAdminScope') && $u->hasAdminScope('orders'))
                         <a class="nav-link" href="{{ route('admin.orders.index') }}">
                             <i class="fas fa-cog"></i> Manage Orders
                         </a>
@@ -159,7 +160,8 @@
                 <h2 style="color: #DC143C;">Order #{{ $order->id }}</h2>
                 <div class="d-flex align-items-center gap-2">
                     @auth
-                        @if(auth()->user()->is_admin)
+                        @php $u = auth()->user(); @endphp
+                        @if(method_exists($u, 'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u, 'hasAdminScope') && $u->hasAdminScope('orders'))
                             <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PATCH')

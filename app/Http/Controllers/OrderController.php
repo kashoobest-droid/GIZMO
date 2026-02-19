@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderShipped;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Models\Verification;
 
 /**
  * OrderController - Handles all order-related operations
@@ -50,6 +54,11 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
+        
+
+        // Determine whether the user needs to provide a shipping address
+        $needsAddress = method_exists($user, 'hasShippingAddress') && ! $user->hasShippingAddress();
+
         // Validate stock
         foreach ($cartItems as $item) {
             if ($item->product->quantity < $item->quantity) {
@@ -69,7 +78,15 @@ class OrderController extends Controller
             }
         }
 
-        return view('checkout', compact('cartItems', 'subtotal', 'coupon', 'discount', 'total'));
+        $phoneVerified = false;
+        if ($user->phone) {
+            $phoneVerified = Verification::where('phone', $user->phone)
+                ->where('verified', true)
+                ->where('expires_at', '>', now())
+                ->exists();
+        }
+
+        return view('checkout', compact('cartItems', 'subtotal', 'coupon', 'discount', 'total', 'needsAddress', 'phoneVerified'));
     }
 
     /**
@@ -96,11 +113,57 @@ class OrderController extends Controller
      * - If any step fails, all changes rolled back
      * - Prevents partial orders
      */
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\TwilioService $twilio)
     {
         $user = Auth::user();
+        // Refresh user from DB to pick up any phone updates performed by the verification flow
+        try {
+            $user->refresh();
+        } catch (\Throwable $e) {
+            // ignore refresh failures
+        }
+        Log::info('OrderController@store called', ['user_id' => $user?->id, 'phone' => $user?->phone]);
         $cartItems = $user->cartItems()->with('product')->get();
 
+        // Normalize transaction_id if JS/form submitted it as an array by mistake
+        if ($request->has('transaction_id') && is_array($request->input('transaction_id'))) {
+            $first = $request->input('transaction_id')[0] ?? null;
+            $request->merge(['transaction_id' => $first]);
+            Log::warning('transaction_id received as array; coerced to string', ['user_id' => $user->id ?? null, 'transaction_id_first' => $first]);
+        }
+
+        // Enforce phone verification before allowing checkout.
+        // Accept any of:
+        // - a verified `Verification` record for the user's phone
+        // - the user's `phone_verified_at` timestamp
+        // - a recent session flag set during verification flows (`otp_verified_for`)
+        $phone = $user->phone;
+        $sessionVerifiedPhone = session('otp_verified_for');
+        $hasVerifiedPhone = false;
+
+        // If session marks this phone as verified, trust it
+        if (! empty($sessionVerifiedPhone) && $sessionVerifiedPhone === $phone) {
+            $hasVerifiedPhone = true;
+        }
+
+        // Check user's persistent flag
+        if (! $hasVerifiedPhone && ! empty($user->phone_verified_at)) {
+            $hasVerifiedPhone = true;
+        }
+
+        // Check verification records (some verification flows create verified records)
+        if (! $hasVerifiedPhone && ! empty($phone)) {
+            $hasVerifiedPhone = \App\Models\Verification::where('phone', $phone)
+                ->where(function ($q) {
+                    $q->where('verified', true)->orWhereNull('code');
+                })
+                ->where('expires_at', '>', now())
+                ->exists();
+        }
+
+        if (! $hasVerifiedPhone) {
+            return redirect()->back()->withInput()->with('error', 'Please verify your phone number again before checkout.');
+        }
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
@@ -108,7 +171,97 @@ class OrderController extends Controller
         $request->validate([
             'notes' => 'nullable|string|max:500',
             'coupon_code' => 'nullable|string|max:50',
+            'country' => 'nullable|string|max:100',
+            'street_name' => 'nullable|string|max:191',
+            'building_name' => 'nullable|string|max:191',
+            'floor_apartment' => 'nullable|string|max:100',
+            'landmark' => 'nullable|string|max:191',
+            'city_area' => 'nullable|string|max:191',
+            'phone' => 'nullable|string|max:30',
+            'payment_method' => 'required|in:bankak,cod',
+            'receipt' => 'required_if:payment_method,bankak|image|max:4096',
+            'transaction_id' => ['required_if:payment_method,bankak', 'nullable', 'string', 'max:255', \Illuminate\Validation\Rule::unique('orders', 'transaction_id')],
         ]);
+
+        // If address fields were submitted, persist them to the user's profile
+        $addressFields = $request->only(['country', 'street_name', 'building_name', 'floor_apartment', 'landmark', 'city_area', 'phone']);
+        $addressProvided = collect($addressFields)->filter(fn($v) => filled($v))->isNotEmpty();
+        if ($addressProvided) {
+            $user->fill($addressFields);
+            $user->save();
+        }
+
+        // Defensive: require a shipping address before creating the order
+        if (method_exists($user, 'hasShippingAddress') && ! $user->hasShippingAddress()) {
+            return redirect()->back()->withInput()->with('error', 'Shipping Address is required to place an order.');
+        }
+
+        // Payment-specific processing
+        $paymentMethod = $request->payment_method;
+        $transactionId = null;
+        $receiptPath = null;
+
+        if ($paymentMethod === 'bankak') {
+            // store receipt
+            if ($request->hasFile('receipt')) {
+                try {
+                    $disk = config('filesystems.default', 'public');
+                    // If default disk is cloudinary (or explicitly set), attempt to upload there
+                    if ($disk === 'cloudinary') {
+                        // putFile returns the stored path (public id)
+                        $stored = Storage::disk('cloudinary')->putFile('receipts', $request->file('receipt'));
+                        // Try to resolve a secure URL; Storage::url should work for Cloudinary driver
+                        try {
+                            $receiptPath = Storage::disk('cloudinary')->url($stored);
+                        } catch (\Throwable $e) {
+                            // Fallback: use CloudinaryHelper to build URL from returned path
+                            $receiptPath = \App\Helpers\CloudinaryHelper::getUrl($stored);
+                        }
+                    } else {
+                        $receiptPath = $request->file('receipt')->store('receipts', $disk);
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                    // fallback to local public storage to avoid blocking order creation
+                    try {
+                        $receiptPath = $request->file('receipt')->store('receipts', 'public');
+                    } catch (\Throwable $inner) {
+                        report($inner);
+                        $receiptPath = null;
+                    }
+                }
+            }
+            $transactionId = $request->transaction_id;
+            // Check for existing order with same transaction id to avoid unique constraint errors.
+            if ($transactionId) {
+                $existing = Order::where('transaction_id', $transactionId)->first();
+                if ($existing) {
+                    // If the existing order belongs to the same user, redirect them to that order.
+                    if ($existing->user_id === $user->id) {
+                        return redirect()->route('orders.show', $existing->id)->with('success', 'An order with this transaction id already exists.');
+                    }
+
+                    // Otherwise reject — transaction id in use by another account.
+                    return redirect()->back()->withInput()->with('error', 'The transaction id has already been used. If this is your payment, contact support.');
+                }
+            }
+            $paymentStatus = 'awaiting_admin_approval';
+        } elseif ($paymentMethod === 'cod') {
+            // COD only available for Port Sudan addresses
+            $city = strtolower(trim($user->city_area ?? ''));
+            if (strpos($city, 'port') === false && strpos($city, 'port sudan') === false && strpos($city, 'portsudan') === false) {
+                return redirect()->back()->withInput()->with('error', 'Cash on Delivery is only available for Port Sudan addresses.');
+            }
+
+            // require phone verification (reuse computed flag)
+            if (! $hasVerifiedPhone) {
+                return redirect()->back()->withInput()->with('error', 'Please verify your phone number via OTP before placing a COD order.');
+            }
+
+            $paymentStatus = 'pending_delivery';
+        } else {
+            $paymentStatus = 'pending';
+        }
 
         // Validate stock again (prevents race conditions)
         foreach ($cartItems as $item) {
@@ -131,12 +284,16 @@ class OrderController extends Controller
         $total = max(0, $subtotal - $discount);
 
         $order = null;
-        DB::transaction(function () use ($user, $cartItems, $shippingAddress, $phone, $request, $coupon, $discount, $total, &$order) {
+        DB::transaction(function () use ($user, $cartItems, $shippingAddress, $phone, $request, $coupon, $discount, $total, $paymentMethod, $paymentStatus, $transactionId, $receiptPath, &$order) {
             $orderSubtotal = 0;
-            // Create the order
+            // Create the order with payment metadata
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => 'pending',
+                'payment_method' => $paymentMethod,
+                'payment_status' => $paymentStatus,
+                'transaction_id' => $transactionId,
+                'receipt_path' => $receiptPath,
                 'total' => $total,
                 'shipping_address' => $shippingAddress,
                 'phone' => $phone,
@@ -168,6 +325,27 @@ class OrderController extends Controller
 
             $user->cartItems()->delete();
         });
+
+        // Log order payment method for admin visibility and debugging
+        try {
+            Log::info('Order created', ['order_id' => $order->id ?? null, 'payment_method' => $order->payment_method ?? $paymentMethod]);
+        } catch (\Throwable $e) {
+            // don't break order flow if logging fails
+            report($e);
+        }
+
+        // Defensive: ensure payment_method persisted. Some environments/migrations
+        // or DB drivers might ignore unknown keys during create; enforce now.
+        try {
+            if ($order && empty($order->payment_method) && ! empty($paymentMethod)) {
+                $order->payment_method = $paymentMethod;
+                $order->payment_status = $order->payment_status ?? $paymentStatus ?? 'pending';
+                $order->save();
+                Log::info('Order payment_method enforced after create', ['order_id' => $order->id, 'payment_method' => $order->payment_method]);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Queue email so the request returns immediately. Prevents 502 on Railway.
         // On Railway: set QUEUE_CONNECTION=database and run a worker (see RAILWAY_DEPLOY.md).
@@ -308,8 +486,193 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $newStatus = $request->status;
+
+        // When marking delivered, if not already set, record payment received amount (admin/delivery signs)
+        if ($newStatus === 'delivered') {
+            $updates = ['status' => 'delivered'];
+
+            if (is_null($order->payment_received_amount)) {
+                // Assign the money value to payment_received_amount when delivered
+                $updates['payment_received_amount'] = $order->total;
+                // mark payment_status as paid if not already
+                $updates['payment_status'] = $order->payment_status ?? 'paid';
+            }
+
+            $order->update($updates);
+        } else {
+            $order->update(['status' => $newStatus]);
+
+            // If order moved to shipped, notify the customer
+            if ($newStatus === 'shipped') {
+                try {
+                    Mail::to($order->user->email)->queue(new OrderShipped($order->fresh(['items', 'user'])));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
 
         return back()->with('success', 'Order status updated.');
+    }
+
+    /**
+     * Admin approves a Bankak payment after manual verification.
+     */
+    public function approvePayment(Request $request, Order $order)
+    {
+        // Only admin middleware route should reach here
+        if ($order->payment_method !== 'bankak') {
+            return back()->with('error', 'This order is not a Bankak payment.');
+        }
+
+        $order->update([
+            'payment_status' => 'verified',
+            'status' => 'processing',
+        ]);
+
+        // Generate PDF invoice and attach to approval email (if dompdf available)
+        $pdfData = null;
+        $filename = 'invoice-' . $order->id . '.pdf';
+        try {
+            if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+                $fresh = $order->fresh(['items.product', 'user']);
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.order-invoice', ['order' => $fresh]);
+                $pdfData = $pdf->output();
+                // Base64-encode the PDF so it remains valid UTF-8 when passed through transports/logging
+                $pdfData = base64_encode($pdfData);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            $pdfData = null;
+        }
+
+        // Send payment approved email with invoice attached when available
+        try {
+            // Attempt to send immediately (helps debug delivery issues when queue driver is sync)
+            Mail::to($order->user->email)->send(new \App\Mail\PaymentApproved($order->fresh(['items', 'user']), $pdfData, $filename));
+            \Log::info('PaymentApproved email sent (attempted) for order ' . $order->id, ['email' => $order->user->email]);
+        } catch (\Throwable $e) {
+            report($e);
+            \Log::error('Failed sending PaymentApproved email for order ' . $order->id, ['exception' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Payment verified and order moved to processing.');
+    }
+
+    /**
+     * Show payment edit form for customers via signed link.
+     */
+    public function editPayment(Request $request, Order $order)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403);
+        }
+
+        // Only allow editing when payment was rejected
+        if ($order->payment_status !== 'failed') {
+            return redirect('/')->with('error', 'This payment cannot be edited.');
+        }
+
+        // Create a signed post URL for the update action with the same expiry
+        $postUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute('orders.payment.update', now()->addHours(72), ['order' => $order->id]);
+
+        return view('orders.payment-edit', compact('order', 'postUrl'));
+    }
+
+    /**
+     * Handle the posted payment update from the secure link.
+     */
+    public function updatePayment(Request $request, Order $order)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403);
+        }
+
+        if ($order->payment_status !== 'failed') {
+            return redirect('/')->with('error', 'This payment cannot be updated.');
+        }
+
+        $data = $request->validate([
+            'transaction_id' => 'required|string|max:255',
+            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'note' => 'nullable|string|max:1000',
+        ]);
+
+        // Handle receipt upload
+        if ($request->hasFile('receipt')) {
+            try {
+                $path = $request->file('receipt')->store('receipts');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Failed to store receipt. Please try again.');
+            }
+            $order->receipt_path = $path;
+        }
+
+        // Update transaction id and set payment_status back to awaiting admin review
+        $order->transaction_id = $data['transaction_id'];
+        $order->payment_status = 'awaiting_admin_approval';
+        $order->save();
+
+        // Optionally notify admin here (left to ops)
+
+        // Redirect to the signed edit (GET) page to avoid issuing a GET to the POST-only update route
+        try {
+            $editUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute('orders.payment.edit', now()->addHours(72), ['order' => $order->id]);
+        } catch (\Throwable $e) {
+            $editUrl = url('/');
+        }
+
+        return redirect($editUrl)->with('success', 'Payment update submitted. Our team will review it shortly.');
+    }
+
+    /**
+     * Admin rejects a Bankak payment.
+     */
+    public function rejectPayment(Request $request, Order $order)
+    {
+        if ($order->payment_method !== 'bankak') {
+            return back()->with('error', 'This order is not a Bankak payment.');
+        }
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $reason = $data['reason'] ?? null;
+
+        $updates = [
+            'payment_status' => 'failed',
+            'status' => 'cancelled',
+        ];
+
+        // Persist rejection_reason only if the column exists (avoid migration mismatch errors)
+        try {
+            if (\Schema::hasColumn('orders', 'rejection_reason')) {
+                $updates['rejection_reason'] = $reason;
+            }
+        } catch (\Throwable $e) {
+            // If Schema is not accessible for some reason, skip adding the column
+        }
+
+        $order->update($updates);
+
+        // Build a temporary signed edit link so customer can securely resubmit payment details
+        try {
+            $editUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'orders.payment.edit', now()->addHours(72), ['order' => $order->id]
+            );
+        } catch (\Throwable $e) {
+            $editUrl = null;
+        }
+
+        // Send payment rejected email including the reason and edit link
+        try {
+            Mail::to($order->user->email)->queue(new \App\Mail\PaymentRejected($order->fresh(['items', 'user']), $reason, $editUrl));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return back()->with('success', 'Payment rejected and order cancelled.');
     }
 }

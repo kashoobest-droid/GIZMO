@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <title>Admin Dashboard - KS Tech</title>
+    <title>Admin Dashboard - GIZMO Store</title>
     <style>
         * {
             margin: 0;
@@ -162,40 +164,67 @@
             border-collapse: collapse;
             overflow-x: auto;
         }
-
+        /* Modern orders table */
         .table {
             margin-bottom: 0;
             font-size: 0.95rem;
             color: #e0e0e0;
+            border-collapse: separate;
+            border-spacing: 0 0.6rem; /* add vertical spacing between rows */
         }
 
         .table thead {
-            background: rgba(30, 30, 30, 0.8);
-            border-bottom: 2px solid rgba(220, 20, 60, 0.2);
+            background: transparent;
+        }
+
+        /* Ensure the header row itself is dark so the full row shows a solid dark bar */
+        .table thead tr {
+            background: linear-gradient(90deg, #0f0f0f 0%, #161616 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
         }
 
         .table thead th {
-            color: #000000;
-            font-weight: 600;
-            padding: 1.2rem 1rem;
+            background: transparent; /* let the tr background show through */
+            color: #f1f1f1;
+            font-weight: 700;
+            padding: 1rem 1rem;
             text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+            letter-spacing: 0.6px;
         }
 
         .table tbody tr {
-            border-bottom: 1px solid rgba(220, 20, 60, 0.1);
-            transition: all 0.2s ease;
+            background: linear-gradient(120deg, #0f0f0f 0%, #161616 100%);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .table tbody tr:hover {
-            background-color: rgba(220, 20, 60, 0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.6);
         }
 
         .table tbody td {
             padding: 1rem;
             vertical-align: middle;
-            color: #000000;
+            color: #e8e8e8;
+            background: transparent;
+            border: none;
+        }
+
+        /* Make rounded rows show by hiding overflow on table wrapper */
+        .table-responsive { overflow: visible; }
+
+        /* Compact header for small screens */
+        @media (max-width: 768px) {
+            .table thead { display: none; }
+            .table tbody tr { display: block; padding: 0.8rem; }
+            .table tbody td { display: flex; justify-content: space-between; padding: 0.6rem 0.8rem; }
+            .table tbody td:first-child { font-weight: 700; }
         }
 
         .badge {
@@ -342,13 +371,22 @@
 <body>
     <nav class="navbar navbar-custom navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> KS TECH Admin</a>
+            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> GIZMO Store</a>
             <div class="d-flex gap-3 flex-wrap">
                 <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
-                <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
-                <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
-                <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @if(auth()->check() && (method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin() || method_exists(auth()->user(), 'hasAdminScope') && auth()->user()->hasAdminScope('orders')))
+                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
+                @endif
+                @php $u = auth()->user(); @endphp
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('products')))
+                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories')))
+                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('users')))
+                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @endif
                 <a class="nav-link" href="/"><i class="fas fa-store"></i> View Store</a>
             </div>
         </div>
@@ -429,7 +467,11 @@
                                 <td><strong>@currency($order->total)</strong></td>
                                 <td><span class="badge badge-{{ strtolower($order->status) }}">{{ ucfirst($order->status) }}</span></td>
                                 <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
-                                <td><a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-warning">View</a></td>
+                                <td>
+                                    <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-outline-light" title="View Order">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>

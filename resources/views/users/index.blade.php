@@ -22,9 +22,9 @@
 
         /* Navbar Styling */
         .navbar-custom {
-            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             border-bottom: 2px solid #DC143C;
             padding: 1rem 0;
         }
@@ -98,12 +98,19 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .btn-back:hover {
             color: white;
             background: linear-gradient(135deg, #8B0000 0%, #6B0000 100%);
             transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .btn-back:focus {
+            outline: none;
+            text-decoration: none;
         }
 
         /* Table Card */
@@ -186,22 +193,37 @@
             margin-right: 0.8rem;
         }
 
-        .badge-admin {
-            background: #000000;
-            color: #ff0000;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-weight: 500;
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 600;
             font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        .badge-admin {
+            background: linear-gradient(135deg,#2a2a2a 0%, #232323 100%);
+            color: #ffd966;
+            border: 1px solid rgba(255,217,102,0.08);
+        }
+
+        .badge-admin i {
+            color: #ffd966;
+            font-size: 0.95rem;
         }
 
         .badge-customer {
-            background: rgba(149, 165, 166, 0.2);
-            color: #b0b0b0;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.85rem;
+            background: rgba(149,165,166,0.08);
+            color: #7f8c8d;
+            border: 1px solid rgba(127,140,141,0.06);
+        }
+
+        .badge-customer i {
+            color: #7f8c8d;
+            font-size: 0.95rem;
         }
 
         /* Action Buttons */
@@ -367,25 +389,50 @@
                 margin-right: 0.2rem;
             }
 
-            .table tbody td:nth-child(n+5) {
+            /* Hide Contact and Location columns on small screens, keep Role and Actions visible */
+            .table thead th:nth-child(3),
+            .table thead th:nth-child(4),
+            .table tbody td:nth-child(3),
+            .table tbody td:nth-child(4) {
                 display: none;
+            }
+
+            /* Make action buttons stack and fill width on mobile so they're easy to tap */
+            .table tbody td:last-child {
+                text-align: center;
+                min-width: 120px; /* give space for stacked buttons */
+            }
+
+            .table tbody td:last-child .btn-action {
+                display: block;
+                width: 100%;
+                margin: 0 0 6px 0;
+                box-sizing: border-box;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- Navbar (match admin/orders style) -->
     <nav class="navbar navbar-custom navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-power-off"></i> GIZMO SD
-            </a>
+            <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> GIZMO Store</a>
             <div class="d-flex gap-3 flex-wrap">
                 <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-boxes"></i> Products</a>
-                <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
-                <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
-                <a class="nav-link" href="/">Back to Store</a>
+                @if(auth()->check() && (method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin() || method_exists(auth()->user(), 'hasAdminScope') && auth()->user()->hasAdminScope('orders')))
+                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
+                @endif
+                @php $u = auth()->user(); @endphp
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('products')))
+                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories')))
+                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
+                @endif
+                @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('users')))
+                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                @endif
+                <a class="nav-link" href="/"><i class="fas fa-store"></i> View Store</a>
             </div>
         </div>
     </nav>
@@ -476,7 +523,7 @@
                                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-action btn-edit" title="Edit User">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;" class="confirmable-form" data-confirm="Are you sure you want to delete this user?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-action btn-delete" title="Delete User">

@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Helpers\CloudinaryHelper;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use App\Models\User;
+use App\Models\Verification;
+use Illuminate\Support\Facades\Log;
+use App\Services\TwilioService;
+
 
 /**
  * ProfileController - User own account management
@@ -72,7 +76,12 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-        return view('profile', compact('user'));
+        $pendingVerification = \App\Models\Verification::where('phone', $user->phone)
+            ->where('verified', false)
+            ->where('expires_at', '>', now())
+            ->exists();
+
+        return view('profile', compact('user', 'pendingVerification'));
     }
 
     /**
@@ -125,7 +134,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable','string','max:30','regex:/^\+(249|20)[0-9]{6,12}$/'],
             'country' => 'nullable|string|max:255',
             'street_name' => 'nullable|string|max:255',
             'building_name' => 'nullable|string|max:255',
@@ -146,7 +155,33 @@ class ProfileController extends Controller
             }
         }
 
+        $phoneChanged = array_key_exists('phone', $validated) && $validated['phone'] && $validated['phone'] !== $user->phone;
+
+        // Save profile fields (avatar handled above)
         $user->update($validated);
+
+        // If phone changed, generate OTP and create verification record (send via Twilio if available, otherwise log)
+        if ($phoneChanged) {
+            // Keep backward-compat by using TwilioService if available via DI
+            try {
+                app(TwilioService::class)->sendOtp($validated['phone']);
+            } catch (\Throwable $e) {
+                Log::info('OTP send failed: ' . $e->getMessage());
+            }
+
+            // Store pending_phone in session so confirm endpoint can pick it up
+            session(['pending_phone' => $validated['phone']]);
+
+            // If the phone was verified earlier via the verification endpoint before saving,
+            // mark it now on the user record.
+            if (session('otp_verified_for') && session('otp_verified_for') === $validated['phone']) {
+                $user->phone_verified_at = now();
+                $user->save();
+                session()->forget('otp_verified_for');
+            }
+
+            return redirect()->route('profile.edit')->with('success', 'Profile updated. A verification code was sent to your phone — please verify it to enable COD and other features.');
+        }
 
         return redirect()->route('profile.edit')->with('success', 'Profile updated successfully.');
     }
@@ -231,5 +266,114 @@ class ProfileController extends Controller
         ]);
 
         return redirect()->route('profile.edit')->with('success', 'Password updated successfully.');
+    }
+
+    /**
+     * Save only the shipping address (AJAX from checkout).
+     */
+    public function saveAddress(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'phone' => ['nullable','string','max:30','regex:/^\+(249|20)[0-9]{6,12}$/'],
+            'country' => 'nullable|string|max:255',
+            'street_name' => 'nullable|string|max:255',
+            'building_name' => 'nullable|string|max:255',
+            'floor_apartment' => 'nullable|string|max:255',
+            'landmark' => 'nullable|string|max:255',
+            'city_area' => 'nullable|string|max:255',
+        ]);
+
+        $phoneChanged = array_key_exists('phone', $validated) && $validated['phone'] && $validated['phone'] !== $user->phone;
+
+        $user->update($validated);
+
+        if ($phoneChanged) {
+            try {
+                app(\App\Services\TwilioService::class)->sendOtp($validated['phone']);
+            } catch (\Throwable $e) {
+                Log::info('OTP send failed: ' . $e->getMessage());
+            }
+            session(['pending_phone' => $validated['phone']]);
+            if (session('otp_verified_for') && session('otp_verified_for') === $validated['phone']) {
+                $user->phone_verified_at = now();
+                $user->save();
+                session()->forget('otp_verified_for');
+            }
+        }
+
+        return response()->json(['ok' => true, 'message' => 'Address saved.']);
+    }
+
+    /**
+     * AJAX endpoint: send OTP for a new phone (keeps controllers thin via TwilioService)
+     */
+    public function sendPhoneOtp(Request $request, TwilioService $twilio)
+    {
+        $request->validate(['new_phone' => ['required','string','regex:/^\+(249|20)[0-9]{6,12}$/']]);
+
+        try {
+            $twilio->sendOtp($request->new_phone);
+            session(['pending_phone' => $request->new_phone]);
+            return response()->json(['status' => 'success', 'message' => 'OTP Sent']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 429);
+        }
+    }
+
+    /**
+     * AJAX endpoint: confirm phone using OTP stored in session
+     */
+    public function confirmPhone(Request $request, TwilioService $twilio)
+    {
+        $request->validate(['code' => 'required|string']);
+
+        $phone = session('pending_phone');
+        if (! $phone) {
+            return response()->json(['message' => 'No pending phone found.'], 422);
+        }
+
+        if ($twilio->verifyOtp($phone, $request->code)) {
+            $user = auth()->user();
+            $user->phone = $phone;
+            // Attempt to set phone_verified_at; if DB column is missing or save fails,
+            // fallback to creating a verified Verification record and set session flag.
+            try {
+                $user->phone_verified_at = now();
+                $user->save();
+                session()->forget('pending_phone');
+                return response()->json(['message' => 'Phone updated and verified!']);
+            } catch (\Throwable $e) {
+                // Log the error but do not expose sensitive details to the client.
+                report($e);
+                // Ensure a verified record exists so order checks succeed.
+                try {
+                    \App\Models\Verification::create([
+                        'phone' => $phone,
+                        'code' => null,
+                        'verified' => true,
+                        'expires_at' => now()->addYears(1),
+                        'attempts' => 0,
+                    ]);
+                } catch (\Throwable $inner) {
+                    report($inner);
+                }
+
+                // Persist the phone on the users table directly (avoid touching phone_verified_at column).
+                try {
+                    \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)->update(['phone' => $phone]);
+                } catch (\Throwable $inner) {
+                    report($inner);
+                }
+
+                // Mark in session so any UI or later save actions know this phone was verified.
+                session(['otp_verified_for' => $phone]);
+                session()->forget('pending_phone');
+                return response()->json(['message' => 'Phone verified (saved via fallback).']);
+            }
+        }
+
+        return response()->json(['message' => 'Invalid or expired code.'], 422);
     }
 }

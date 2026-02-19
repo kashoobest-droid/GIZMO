@@ -709,6 +709,48 @@
                         <span class="form-text" style="margin-left: 1.8rem;">Grant administrative privileges to this user</span>
                     </div>
 
+                    <!-- Admin Scopes -->
+                    <div class="section-title" style="margin-top:1.5rem;">
+                        <i class="fas fa-key"></i> Admin Scopes
+                    </div>
+
+                    <div class="form-check">
+                        @php
+                            $currentScopes = old('admin_scopes', $user->admin_scopes ?? []);
+                            if (!is_array($currentScopes)) { $currentScopes = (array) $currentScopes; }
+                        @endphp
+
+                        <div class="form-group">
+                            <label class="form-label">Select allowed admin areas for this user</label>
+                            <div class="d-flex flex-wrap" style="gap:0.75rem;">
+                                @foreach(['products' => 'Products', 'categories' => 'Categories', 'offers' => 'Offers', 'users' => 'Users', 'coupons' => 'Coupons', 'orders' => 'Orders'] as $scopeKey => $scopeLabel)
+                                    <div class="form-check" style="margin-right:1rem;">
+                                        <input class="form-check-input" type="checkbox" name="admin_scopes[]" id="scope_{{ $scopeKey }}" value="{{ $scopeKey }}" {{ in_array($scopeKey, $currentScopes) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="scope_{{ $scopeKey }}">{{ $scopeLabel }}</label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <span class="form-text">Scopes control fine-grained access; master admin bypasses these.</span>
+                        </div>
+                    </div>
+
+                    <!-- Master Admin Toggle (only editable by existing master admins) -->
+                    <div class="form-check" style="margin-top:1rem;">
+                        @if(auth()->check() && method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin())
+                            <input class="form-check-input" type="checkbox" name="is_master_admin" id="is_master_admin" value="1" {{ $user->isMasterAdmin() ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_master_admin">
+                                <i class="fas fa-shield"></i> Master Admin
+                            </label>
+                            <span class="form-text" style="margin-left: 1.8rem;">Master admin can manage scopes and has full access.</span>
+                        @else
+                            <input class="form-check-input" type="checkbox" id="is_master_admin" disabled {{ $user->isMasterAdmin() ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_master_admin">
+                                <i class="fas fa-shield"></i> Master Admin
+                            </label>
+                            <span class="form-text" style="margin-left: 1.8rem;">Only the master admin can change this flag.</span>
+                        @endif
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="form-actions">
                         <button type="submit" class="btn-submit">

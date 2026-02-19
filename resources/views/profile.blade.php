@@ -2,6 +2,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
     <link rel="shortcut icon" href="https://res.cloudinary.com/dgrnbtgts/image/upload/v1771338287/gizmo_qsab1d.png">
@@ -103,8 +104,22 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">{{ __('messages.profile_phone') }}</label>
-                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}">
+                        <div class="d-flex gap-2">
+                            <input type="text" id="phoneInput" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}" placeholder="+249######### or +20#########">
+                            <span id="verifiedBadge" class="btn btn-success" style="display: {{ $user->hasVerifiedPhone() ? 'inline-block' : 'none' }};">Verified</span>
+                            <button type="button" id="sendOtpBtn" class="btn btn-outline-primary" style="display: {{ $user->hasVerifiedPhone() ? 'none' : 'inline-block' }};">Send OTP</button>
+                        </div>
                         @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- OTP block (rendered visible if session shows otp_sent or pending) --}}
+                    <div id="otpBlock" class="mb-3" style="display: {{ session('otp_sent') || (!empty($pendingVerification) && $pendingVerification) ? 'block' : 'none' }};">
+                        <label class="form-label">Enter OTP</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="otpCode" name="code" class="form-control" placeholder="6-digit code">
+                            <button type="button" id="verifyOtpBtn" class="btn btn-primary">Verify</button>
+                        </div>
+                        <div id="otpMessage" class="form-text text-muted">Didn't receive the code? Click Send OTP again to resend.</div>
                     </div>
 
                     <hr>
@@ -417,6 +432,98 @@
                         btnText.classList.add('d-none');
                         btnSpinner.classList.remove('d-none');
                     });
+                </script>
+
+                <script>
+                    // AJAX handlers for Send OTP and Verify OTP to avoid nested form submits
+                    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const sendBtn = document.getElementById('sendOtpBtn');
+                    const otpBlock = document.getElementById('otpBlock');
+                    const verifyBtn = document.getElementById('verifyOtpBtn');
+                    const otpInput = document.getElementById('otpCode');
+                    const phoneInput = document.getElementById('phoneInput');
+                    const otpMessage = document.getElementById('otpMessage');
+                    const verifiedBadge = document.getElementById('verifiedBadge');
+
+                    const sendUrl = "{{ route('profile.phone.send') }}";
+                    const verifyUrl = "{{ route('profile.phone.confirm') }}";
+
+                    if (sendBtn) {
+                        sendBtn.addEventListener('click', async function() {
+                            const phone = phoneInput.value.trim();
+                            if (!phone) {
+                                alert('Please enter a phone number first.');
+                                return;
+                            }
+                            sendBtn.disabled = true;
+                            sendBtn.innerText = 'Sending...';
+                            try {
+                                const res = await fetch(sendUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': csrf,
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ phone })
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                    otpBlock.style.display = 'block';
+                                    otpMessage.innerText = data.message || 'OTP sent.';
+                                    otpInput.focus();
+                                } else {
+                                    otpMessage.innerText = data.message || 'Failed to send OTP.';
+                                    console.warn(data);
+                                }
+                            } catch (err) {
+                                otpMessage.innerText = 'Network error sending OTP.';
+                                console.error(err);
+                            } finally {
+                                sendBtn.disabled = false;
+                                sendBtn.innerText = 'Send OTP';
+                            }
+                        });
+                    }
+
+                    if (verifyBtn) {
+                        verifyBtn.addEventListener('click', async function() {
+                            const phone = phoneInput.value.trim();
+                            const code = otpInput.value.trim();
+                            if (!code) {
+                                alert('Please enter the 6-digit code.');
+                                return;
+                            }
+                            verifyBtn.disabled = true;
+                            verifyBtn.innerText = 'Verifying...';
+                            try {
+                                const res = await fetch(verifyUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': csrf,
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ phone, code })
+                                });
+                                const data = await res.json();
+                                if (res.ok && data.ok !== false) {
+                                    otpMessage.innerText = data.message || 'Verified.';
+                                    otpBlock.style.display = 'none';
+                                    verifiedBadge.style.display = 'inline-block';
+                                    sendBtn.style.display = 'none';
+                                } else {
+                                    otpMessage.innerText = data.message || 'Invalid or expired code.';
+                                }
+                            } catch (err) {
+                                otpMessage.innerText = 'Network error verifying OTP.';
+                                console.error(err);
+                            } finally {
+                                verifyBtn.disabled = false;
+                                verifyBtn.innerText = 'Verify';
+                            }
+                        });
+                    }
                 </script>
 
                 <hr class="my-4">

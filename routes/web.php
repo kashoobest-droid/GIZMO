@@ -76,23 +76,27 @@ Route::post('/password/reset', [ResetPasswordController::class, 'reset'])->middl
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
-        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index')->middleware('admin.scope:orders');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('admin.scope:orders');
+        Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->name('orders.approvePayment')->middleware('admin.scope:orders');
+        Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.rejectPayment')->middleware('admin.scope:orders');
     });
-    Route::resource('category', categoryController::class);
-    Route::resource('product', productsController::class);
-    Route::resource('offer', OfferController::class);
-    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
-    Route::get('admin/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
-    Route::get('admin/coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
-    Route::post('admin/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
-    Route::delete('admin/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+    Route::resource('category', categoryController::class)->middleware('admin.scope:categories');
+    Route::resource('product', productsController::class)->middleware('admin.scope:products');
+    Route::resource('offer', OfferController::class)->middleware('admin.scope:offers');
+    Route::resource('users', UserController::class)->except(['create', 'store', 'show'])->middleware('admin.scope:users');
+    Route::get('admin/coupons', [CouponController::class, 'index'])->name('admin.coupons.index')->middleware('admin.scope:coupons');
+    Route::get('admin/coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create')->middleware('admin.scope:coupons');
+    Route::post('admin/coupons', [CouponController::class, 'store'])->name('admin.coupons.store')->middleware('admin.scope:coupons');
+    Route::delete('admin/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy')->middleware('admin.scope:coupons');
 });
 
 // Profile routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'phone.verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/phone/send', [ProfileController::class, 'sendPhoneOtp'])->name('profile.phone.send');
+    Route::post('/profile/phone/confirm', [ProfileController::class, 'confirmPhone'])->name('profile.phone.confirm');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // Cart routes
@@ -106,6 +110,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Phone verification (OTP)
+    Route::get('/verify', function () {
+        $phone = session('phone') ?? (auth()->check() ? auth()->user()->phone : null);
+        return view('auth.verify_phone', compact('phone'));
+    })->name('verify.show');
+    // Backwards-compatible alias for older code that referenced `verification.show`
+    Route::get('/verification', function () {
+        return redirect()->route('verify.show');
+    })->name('verification.show');
+    Route::post('/verify/send-otp', [\App\Http\Controllers\VerificationController::class, 'sendOtp'])->name('verify.send');
+    Route::post('/verify/verify-otp', [\App\Http\Controllers\VerificationController::class, 'verifyOtp'])->name('verify.check');
+
+    // Save shipping address via AJAX from checkout
+    Route::post('/profile/address', [\App\Http\Controllers\ProfileController::class, 'saveAddress'])->name('profile.address.save');
 
     // Favorites routes
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
@@ -125,3 +144,7 @@ Route::post('/review/{review}/react', [ReviewController::class, 'react'])->name(
 
 // Public product view only
 Route::get('/product/{product}', [productsController::class, 'show'])->name('product.show');
+
+// Payment edit via secure signed link (sent to customer on rejection)
+Route::get('/orders/{order}/edit-payment', [OrderController::class, 'editPayment'])->name('orders.payment.edit');
+Route::post('/orders/{order}/update-payment', [OrderController::class, 'updatePayment'])->name('orders.payment.update');

@@ -18,11 +18,17 @@ class Order extends Model
         'notes',
         'coupon_id',
         'discount',
+        'payment_method',
+        'payment_status',
+        'transaction_id',
+        'receipt_path',
+        'payment_received_amount',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
         'discount' => 'decimal:2',
+        'payment_received_amount' => 'decimal:2',
     ];
 
     public function user()

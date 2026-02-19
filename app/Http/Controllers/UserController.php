@@ -152,10 +152,25 @@ class UserController extends Controller
             'landmark' => 'nullable|string|max:255',
             'city_area' => 'nullable|string|max:255',
             'is_admin' => 'nullable|boolean',
+            'admin_scopes' => 'nullable|array',
+            'admin_scopes.*' => 'string|in:products,categories,offers,users,coupons,orders',
+            'is_master_admin' => 'nullable|boolean',
         ]);
 
         // Ensure is_admin is stored as 0/1
         $validated['is_admin'] = $request->has('is_admin') ? 1 : 0;
+
+        // Handle admin_scopes and master flag only when current user is master admin
+        $current = auth()->user();
+
+        if ($current && method_exists($current, 'isMasterAdmin') && $current->isMasterAdmin()) {
+            // admin_scopes may be null -> store as empty array
+            $validated['admin_scopes'] = $request->input('admin_scopes', []);
+            $validated['is_master_admin'] = $request->has('is_master_admin') ? 1 : 0;
+        } else {
+            // Prevent non-master admins from changing scopes or master flag
+            unset($validated['admin_scopes'], $validated['is_master_admin']);
+        }
 
         $user->update($validated);
 

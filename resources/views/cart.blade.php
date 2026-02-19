@@ -179,7 +179,7 @@
                                         <input type="number" name="quantity" value="{{ $item->quantity }}" min="1" max="{{ $item->product->quantity }}" class="form-control form-control-sm" style="width:70px;">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="fas fa-sync-alt"></i></button>
                                     </form>
-                                    <form action="{{ route('cart.remove', $item) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('messages.confirm_remove') }}');">
+                                    <form action="{{ route('cart.remove', $item) }}" method="POST" class="d-inline confirmable-form" data-confirm="{{ __('messages.confirm_remove') }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-remove"><i class="fas fa-trash"></i></button>
@@ -210,5 +210,76 @@
     <a href="{{ route('contact') }}" class="floating-contact-btn" title="Contact Us" aria-label="Contact Us">
         <i class="fas fa-envelope"></i>
     </a>
+    
+    <!-- Confirmation Modal (cart page) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cart-card">
+                <div class="modal-body py-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="font-size:1.6rem;color:#DC143C;line-height:1;"><i class="fas fa-exclamation-circle"></i></div>
+                        <div>
+                            <h5 class="mb-1" id="confirmModalTitle">Are you sure?</h5>
+                            <p id="confirmModalMessage" class="mb-0 text-muted">This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmModalConfirmBtn" class="btn btn-warning">Yes, remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            var confirmModalEl = document.getElementById('confirmModal');
+            if(!confirmModalEl) return;
+            var bsConfirmModal = new bootstrap.Modal(confirmModalEl);
+            var confirmMessageEl = document.getElementById('confirmModalMessage');
+            var confirmTitleEl = document.getElementById('confirmModalTitle');
+            var confirmBtn = document.getElementById('confirmModalConfirmBtn');
+            var pendingCallback = null;
+
+            function showConfirm(message, onConfirm){
+                pendingCallback = onConfirm;
+                confirmMessageEl.textContent = message || 'Are you sure?';
+                bsConfirmModal.show();
+            }
+
+            confirmBtn.addEventListener('click', function(){
+                bsConfirmModal.hide();
+                if(typeof pendingCallback === 'function'){
+                    setTimeout(function(){ pendingCallback(); pendingCallback = null; }, 120);
+                }
+            });
+
+            document.querySelectorAll('form.confirmable-form, form[data-confirm]').forEach(function(form){
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    var msg = form.getAttribute('data-confirm') || form.dataset.confirm || 'Are you sure?';
+                    confirmTitleEl.textContent = 'Please confirm';
+                    showConfirm(msg, function(){ form.submit(); });
+                });
+            });
+
+            document.querySelectorAll('button.confirmable-btn[data-confirm], a.confirmable-btn[data-confirm]').forEach(function(btn){
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var msg = btn.getAttribute('data-confirm') || btn.dataset.confirm || 'Are you sure?';
+                    var form = btn.closest('form');
+                    confirmTitleEl.textContent = 'Please confirm';
+                    showConfirm(msg, function(){
+                        if(form) form.submit();
+                        else {
+                            var href = btn.getAttribute('href');
+                            if(href) window.location.href = href;
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
