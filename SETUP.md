@@ -253,6 +253,30 @@ exit
 
 ### Cache & Session
 
+### Sending email via Brevo (Sendinblue)
+
+To send verification emails using Brevo's SMTP relay, set these values in your `.env`:
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USERNAME=your_brevo_smtp_username
+MAIL_PASSWORD=your_brevo_smtp_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+MAIL_FROM_NAME="Gizmo Store"
+```
+
+After updating `.env` run:
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+Brevo also provides an HTTP API if you prefer to send emails via their API key instead of SMTP. The application uses Laravel's `Mail` API for verification emails, so SMTP configuration is sufficient.
+
 Default configuration uses:
 - **Session Store:** `file` (or `database`)
 - **Cache Driver:** `file` (or `redis` for production)

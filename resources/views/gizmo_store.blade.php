@@ -1334,27 +1334,9 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item {{ session('currency', 'SDG') === 'USD' ? 'active' : '' }}" href="{{ route('currency.set', 'USD') }}">
-                                    @if(session('currency','SDG') === 'USD')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
-                                    USD - US Dollar
-                                </a>
-                            </li>
-                            <li>
                                 <a class="dropdown-item {{ session('currency', 'SDG') === 'EGP' ? 'active' : '' }}" href="{{ route('currency.set', 'EGP') }}">
                                     @if(session('currency','SDG') === 'EGP')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
                                     EGP - Egyptian Pound
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {{ session('currency', 'SDG') === 'AED' ? 'active' : '' }}" href="{{ route('currency.set', 'AED') }}">
-                                    @if(session('currency','SDG') === 'AED')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
-                                    AED - UAE Dirham
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {{ session('currency', 'SDG') === 'SAR' ? 'active' : '' }}" href="{{ route('currency.set', 'SAR') }}">
-                                    @if(session('currency','SDG') === 'SAR')<i class="fas fa-check me-2"></i>@else<span class="me-2" style="width:1em;display:inline-block;"></span>@endif
-                                    SAR - Saudi Riyal
                                 </a>
                             </li>
                         </ul>

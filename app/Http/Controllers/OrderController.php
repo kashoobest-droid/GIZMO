@@ -14,6 +14,8 @@ use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\Verification;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Helpers\CodHelper;
 
 /**
  * OrderController - Handles all order-related operations
@@ -86,7 +88,72 @@ class OrderController extends Controller
                 ->exists();
         }
 
-        return view('checkout', compact('cartItems', 'subtotal', 'coupon', 'discount', 'total', 'needsAddress', 'phoneVerified'));
+        // Check COD eligibility (location + order amount)
+        $codEligibility = CodHelper::isEligible($user->city_area, $total);
+        $codAvailable = $codEligibility['available'];
+        $codMessage = $codEligibility['reason'];
+
+        return view('checkout', compact('cartItems', 'subtotal', 'coupon', 'discount', 'total', 'needsAddress', 'phoneVerified', 'codAvailable', 'codMessage'));
+    }
+
+    /**
+     * Generate secure Cloudinary upload signature for Bankak payment screenshots
+     * 
+     * Returns a JSON response with the signature, timestamp, API key, and cloud name
+     * required to directly upload a file to Cloudinary from the frontend.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCloudinarySignature()
+    {
+        try {
+            $timestamp = now()->getTimestamp();
+            $folder = 'bankak_payments';
+            
+            // Get Cloudinary credentials from config
+            $cloudName = config('cloudinary.cloud.name');
+            $apiKey = config('cloudinary.api.key');
+            $apiSecret = config('cloudinary.api.secret');
+            
+            if (!$cloudName || !$apiKey || !$apiSecret) {
+                \Log::error('Cloudinary config missing', [
+                    'cloud_name' => !$cloudName,
+                    'api_key' => !$apiKey,
+                    'api_secret' => !$apiSecret,
+                ]);
+                return response()->json(['error' => 'Cloudinary not configured'], 500);
+            }
+            
+            // Build parameters for signing
+            $params = [
+                'timestamp' => $timestamp,
+                'folder' => $folder,
+            ];
+            
+            // Sign the request using Cloudinary SDK
+            $signature = Cloudinary::apiSignRequest($params, $apiSecret);
+            
+            \Log::info('Cloudinary signature generated', [
+                'timestamp' => $timestamp,
+                'folder' => $folder,
+                'signature' => substr($signature, 0, 10) . '...',
+            ]);
+            
+            return response()->json([
+                'signature' => $signature,
+                'timestamp' => $timestamp,
+                'api_key' => $apiKey,
+                'cloud_name' => $cloudName,
+                'folder' => $folder,
+                'success' => true,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error generating Cloudinary signature', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+            return response()->json(['error' => 'Failed to generate signature'], 500);
+        }
     }
 
     /**
@@ -162,7 +229,9 @@ class OrderController extends Controller
         }
 
         if (! $hasVerifiedPhone) {
-            return redirect()->back()->withInput()->with('error', 'Please verify your phone number again before checkout.');
+            // Phone verification temporarily disabled for checkout flow.
+            // Previously this returned an error to force OTP verification.
+            Log::info('Checkout phone verification skipped for user', ['user_id' => $user->id, 'phone' => $phone]);
         }
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
@@ -179,7 +248,7 @@ class OrderController extends Controller
             'city_area' => 'nullable|string|max:191',
             'phone' => 'nullable|string|max:30',
             'payment_method' => 'required|in:bankak,cod',
-            'receipt' => 'required_if:payment_method,bankak|image|max:4096',
+            'receipt' => 'nullable|mimes:jpg,png,jpeg|max:2048', // Legacy support - optional for backward compatibility
             'transaction_id' => ['required_if:payment_method,bankak', 'nullable', 'string', 'max:255', \Illuminate\Validation\Rule::unique('orders', 'transaction_id')],
         ]);
 
@@ -202,35 +271,8 @@ class OrderController extends Controller
         $receiptPath = null;
 
         if ($paymentMethod === 'bankak') {
-            // store receipt
-            if ($request->hasFile('receipt')) {
-                try {
-                    $disk = config('filesystems.default', 'public');
-                    // If default disk is cloudinary (or explicitly set), attempt to upload there
-                    if ($disk === 'cloudinary') {
-                        // putFile returns the stored path (public id)
-                        $stored = Storage::disk('cloudinary')->putFile('receipts', $request->file('receipt'));
-                        // Try to resolve a secure URL; Storage::url should work for Cloudinary driver
-                        try {
-                            $receiptPath = Storage::disk('cloudinary')->url($stored);
-                        } catch (\Throwable $e) {
-                            // Fallback: use CloudinaryHelper to build URL from returned path
-                            $receiptPath = \App\Helpers\CloudinaryHelper::getUrl($stored);
-                        }
-                    } else {
-                        $receiptPath = $request->file('receipt')->store('receipts', $disk);
-                    }
-                } catch (\Throwable $e) {
-                    report($e);
-                    // fallback to local public storage to avoid blocking order creation
-                    try {
-                        $receiptPath = $request->file('receipt')->store('receipts', 'public');
-                    } catch (\Throwable $inner) {
-                        report($inner);
-                        $receiptPath = null;
-                    }
-                }
-            }
+            // receipt processing will occur inside DB transaction after order has an id
+            // keep receiptPath null for now
             $transactionId = $request->transaction_id;
             // Check for existing order with same transaction id to avoid unique constraint errors.
             if ($transactionId) {
@@ -247,10 +289,10 @@ class OrderController extends Controller
             }
             $paymentStatus = 'awaiting_admin_approval';
         } elseif ($paymentMethod === 'cod') {
-            // COD only available for Port Sudan addresses
-            $city = strtolower(trim($user->city_area ?? ''));
-            if (strpos($city, 'port') === false && strpos($city, 'port sudan') === false && strpos($city, 'portsudan') === false) {
-                return redirect()->back()->withInput()->with('error', 'Cash on Delivery is only available for Port Sudan addresses.');
+            // COD only available for Port Sudan (Arabic or English) and orders under 60,000 SDG
+            $codEligibility = CodHelper::isEligible($user->city_area, $total);
+            if (!$codEligibility['available']) {
+                return redirect()->back()->withInput()->with('error', $codEligibility['reason']);
             }
 
             // require phone verification (reuse computed flag)
@@ -284,7 +326,7 @@ class OrderController extends Controller
         $total = max(0, $subtotal - $discount);
 
         $order = null;
-        DB::transaction(function () use ($user, $cartItems, $shippingAddress, $phone, $request, $coupon, $discount, $total, $paymentMethod, $paymentStatus, $transactionId, $receiptPath, &$order) {
+        DB::transaction(function () use ($user, $cartItems, $shippingAddress, $phone, $request, $coupon, $discount, $total, $paymentMethod, $paymentStatus, $transactionId, &$order) {
             $orderSubtotal = 0;
             // Create the order with payment metadata
             $order = Order::create([
@@ -293,7 +335,8 @@ class OrderController extends Controller
                 'payment_method' => $paymentMethod,
                 'payment_status' => $paymentStatus,
                 'transaction_id' => $transactionId,
-                'receipt_path' => $receiptPath,
+                // receipt info will be attached after uploading to Cloudinary (if applicable)
+                'receipt_path' => null,
                 'total' => $total,
                 'shipping_address' => $shippingAddress,
                 'phone' => $phone,
@@ -301,6 +344,49 @@ class OrderController extends Controller
                 'coupon_id' => $coupon?->id,
                 'discount' => $discount,
             ]);
+
+            // If payment via Bankak, process any uploaded receipt file (legacy flow)
+            if ($paymentMethod === 'bankak') {
+                if ($request->hasFile('receipt')) {
+                    try {
+                        $file = $request->file('receipt');
+                        $timestamp = time();
+                        $folder = "uploads/users/{$user->id}/orders/{$order->id}";
+                        $filename = "receipt_{$timestamp}." . $file->getClientOriginalExtension();
+
+                        // Upload to Cloudinary using Storage facade (same as product images)
+                        $path = Storage::disk('cloudinary')->putFileAs($folder, $file, $filename);
+                        $receiptUrl = \App\Helpers\CloudinaryHelper::getUrl($path);
+
+                        Log::info('Cloudinary upload (checkout) success', ['path' => $path, 'receipt_url' => $receiptUrl, 'order_id' => $order->id ?? null]);
+
+                        // Persist receipt info on the order record
+                        $order->receipt_path = $path;
+                        $order->receipt_url = $receiptUrl;
+                        $order->receipt_public_id = $folder . '/' . $filename;
+                        $order->save();
+                    } catch (\Throwable $e) {
+                        // log but do not abort; keep order creation going
+                        report($e);
+                        Log::error('Cloudinary upload failed during order create', ['error' => $e->getMessage(), 'order_id' => $order->id ?? null, 'user_id' => $user->id ?? null]);
+                        // Fallback: store receipt to public disk so admin can access via /storage
+                        try {
+                            $fileFallback = $request->file('receipt');
+                            if ($fileFallback) {
+                                $localPath = $fileFallback->store('receipts', 'public');
+                                $order->receipt_path = $localPath;
+                                // Use Storage facade with explicit 'public' disk to avoid cloudinary
+                                $order->receipt_url = \Illuminate\Support\Facades\Storage::disk('public')->url($localPath);
+                                Log::info('Stored receipt fallback to public disk', ['local_path' => $localPath, 'receipt_url' => $order->receipt_url, 'order_id' => $order->id ?? null]);
+                                $order->save();
+                            }
+                        } catch (\Throwable $inner) {
+                            report($inner);
+                            Log::error('Fallback storage failed', ['error' => $inner->getMessage(), 'order_id' => $order->id ?? null]);
+                        }
+                    }
+                }
+            }
 
             // Create order items from cart items
             foreach ($cartItems as $item) {
@@ -402,6 +488,62 @@ class OrderController extends Controller
     }
 
     /**
+     * Generate a signed Cloudinary URL for a private receipt image.
+     * Returns JSON: { url: 'https://...'}
+     * URL expires in 10 minutes.
+     */
+    public function signedReceipt(Order $order)
+    {
+        if (! Auth::user() || ! Auth::user()->is_admin) {
+            abort(403);
+        }
+
+        $publicId = $order->receipt_public_id;
+        if (empty($publicId)) {
+            return response()->json(['error' => 'No receipt available for this order.'], 404);
+        }
+
+        try {
+            // Log the receipt_public_id for debugging
+            Log::info('signedReceipt called', ['order_id' => $order->id, 'public_id' => $publicId, 'receipt_url' => $order->receipt_url]);
+
+            // If we have receipt_url already, use it directly (it's from Cloudinary)
+            if (! empty($order->receipt_url)) {
+                Log::info('Using existing receipt_url', ['order_id' => $order->id, 'receipt_url' => $order->receipt_url]);
+                return response()->json(['url' => $order->receipt_url]);
+            }
+
+            // Fallback: try to generate signed URL from public_id
+            $options = [
+                'sign_url' => true,
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ];
+
+            $result = Cloudinary::privateResource($publicId, $options);
+
+            $url = null;
+            if (is_array($result)) {
+                $url = $result['secure_url'] ?? $result['url'] ?? $result['signed_url'] ?? null;
+            } elseif (is_string($result)) {
+                $url = $result;
+            } elseif (is_object($result)) {
+                $url = $result->secure_url ?? $result->url ?? ($result->signed_url ?? null);
+            }
+
+            if (empty($url)) {
+                $url = \App\Helpers\CloudinaryHelper::getUrl($publicId);
+            }
+
+            Log::info('Generated signed URL', ['order_id' => $order->id, 'url' => $url]);
+            return response()->json(['url' => $url]);
+        } catch (\Throwable $e) {
+            Log::error('signedReceipt failed', ['order_id' => $order->id, 'error' => $e->getMessage(), 'public_id' => $publicId]);
+            report($e);
+            return response()->json(['error' => 'Failed to generate signed URL.'], 500);
+        }
+    }
+
+    /**
      * Admin-only: Display all orders with statistics
      * 
      * @return \Illuminate\View\View
@@ -488,6 +630,32 @@ class OrderController extends Controller
 
         $newStatus = $request->status;
 
+        // Security: Ensure the order ID from the route parameter matches what we're trying to update
+        if (!$order || !$order->id) {
+            \Log::warning('updateStatus called with invalid order', ['order' => $order, 'admin_id' => \Auth::id()]);
+            return back()->with('error', 'Invalid order. Order not found.');
+        }
+
+        // Prevent redundant updates (if status hasn't actually changed)
+        if ($order->status === $newStatus) {
+            \Log::info('updateStatus called with same status (no-op)', [
+                'order_id' => $order->id,
+                'status' => $newStatus,
+                'admin_id' => \Auth::id(),
+            ]);
+            return back()->with('info', 'Order status unchanged.');
+        }
+
+        // Log the status change for audit trail BEFORE making any changes
+        \Log::info('Order status change requested', [
+            'order_id' => $order->id,
+            'user_id' => $order->user_id,
+            'new_status' => $newStatus,
+            'old_status' => $order->status,
+            'admin_id' => \Auth::id(),
+            'timestamp' => now(),
+        ]);
+
         // When marking delivered, if not already set, record payment received amount (admin/delivery signs)
         if ($newStatus === 'delivered') {
             $updates = ['status' => 'delivered'];
@@ -500,8 +668,10 @@ class OrderController extends Controller
             }
 
             $order->update($updates);
+            \Log::info('Order marked as delivered', ['order_id' => $order->id, 'admin_id' => \Auth::id()]);
         } else {
             $order->update(['status' => $newStatus]);
+            \Log::info('Order status updated', ['order_id' => $order->id, 'new_status' => $newStatus, 'admin_id' => \Auth::id()]);
 
             // If order moved to shipped, notify the customer
             if ($newStatus === 'shipped') {
@@ -513,7 +683,7 @@ class OrderController extends Controller
             }
         }
 
-        return back()->with('success', 'Order status updated.');
+        return back()->with('success', 'Order status updated to ' . __('messages.admin_status_' . $newStatus) . '.');
     }
 
     /**
@@ -531,19 +701,21 @@ class OrderController extends Controller
             'status' => 'processing',
         ]);
 
-        // Generate PDF invoice and attach to approval email (if dompdf available)
+        // Generate PDF invoice and attach to approval email (using DomPDF - improved setup for Arabic)
         $pdfData = null;
         $filename = 'invoice-' . $order->id . '.pdf';
         try {
-            if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
-                $fresh = $order->fresh(['items.product', 'user']);
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.order-invoice', ['order' => $fresh]);
-                $pdfData = $pdf->output();
-                // Base64-encode the PDF so it remains valid UTF-8 when passed through transports/logging
-                $pdfData = base64_encode($pdfData);
-            }
+            $fresh = $order->fresh(['items.product', 'user']);
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.order-invoice', ['order' => $fresh]);
+            $pdfData = $pdf->output();
+            // Base64-encode the PDF so it remains valid UTF-8 when passed through transports/logging
+            $pdfData = base64_encode($pdfData);
+            \Log::info('Invoice PDF generated successfully for order ' . $order->id, ['size' => strlen($pdfData)]);
         } catch (\Throwable $e) {
-            report($e);
+            \Log::error('Failed to generate PDF for order ' . $order->id, [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $pdfData = null;
         }
 
@@ -589,24 +761,43 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if ($order->payment_status !== 'failed') {
-            return redirect('/')->with('error', 'This payment cannot be updated.');
-        }
-
         $data = $request->validate([
             'transaction_id' => 'required|string|max:255',
-            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'receipt' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'note' => 'nullable|string|max:1000',
         ]);
 
-        // Handle receipt upload
+        // Handle receipt upload: prefer Cloudinary, fallback to local storage
         if ($request->hasFile('receipt')) {
+            $file = $request->file('receipt');
             try {
-                $path = $request->file('receipt')->store('receipts');
+                $timestamp = time();
+                $folder = "uploads/users/{$order->user_id}/orders/{$order->id}";
+                $filename = "receipt_{$timestamp}." . $file->getClientOriginalExtension();
+
+                // Upload to Cloudinary using Storage facade (same as product images)
+                $path = Storage::disk('cloudinary')->putFileAs($folder, $file, $filename);
+                $receiptUrl = \App\Helpers\CloudinaryHelper::getUrl($path);
+
+                Log::info('Cloudinary upload (updatePayment) success', ['path' => $path, 'receipt_url' => $receiptUrl, 'order_id' => $order->id ?? null]);
+
+                $order->receipt_path = $path;
+                $order->receipt_url = $receiptUrl;
+                $order->receipt_public_id = $folder . '/' . $filename;  // Store folder/filename as public id for reference
             } catch (\Throwable $e) {
-                return back()->with('error', 'Failed to store receipt. Please try again.');
+                Log::error('Cloudinary upload failed (updatePayment)', ['error' => $e->getMessage(), 'order_id' => $order->id ?? null]);
+                // fallback to public storage so admin can view
+                try {
+                    $path = $file->store('receipts', 'public');
+                    $order->receipt_path = $path;
+                    // Use Storage facade with explicit 'public' disk to avoid cloudinary
+                    $order->receipt_url = Storage::disk('public')->url($path);
+                    Log::info('Stored receipt fallback to public disk (updatePayment)', ['local_path' => $path, 'receipt_url' => $order->receipt_url, 'order_id' => $order->id ?? null]);
+                } catch (\Throwable $inner) {
+                    Log::error('Fallback storage failed (updatePayment)', ['error' => $inner->getMessage(), 'order_id' => $order->id ?? null]);
+                    return back()->with('error', 'Failed to store receipt. Please try again.');
+                }
             }
-            $order->receipt_path = $path;
         }
 
         // Update transaction id and set payment_status back to awaiting admin review
@@ -616,14 +807,8 @@ class OrderController extends Controller
 
         // Optionally notify admin here (left to ops)
 
-        // Redirect to the signed edit (GET) page to avoid issuing a GET to the POST-only update route
-        try {
-            $editUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute('orders.payment.edit', now()->addHours(72), ['order' => $order->id]);
-        } catch (\Throwable $e) {
-            $editUrl = url('/');
-        }
-
-        return redirect($editUrl)->with('success', 'Payment update submitted. Our team will review it shortly.');
+        // Redirect to the order details page so the user sees confirmation
+        return redirect()->route('orders.show', $order->id)->with('success', 'Payment update submitted. Our team will review it shortly.');
     }
 
     /**

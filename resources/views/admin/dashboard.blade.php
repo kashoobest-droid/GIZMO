@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <title>Admin Dashboard - GIZMO Store</title>
+    <title>{{ __('messages.admin_dashboard_title') }} - GIZMO Store</title>
     <style>
         * {
             margin: 0;
@@ -114,12 +114,14 @@
         }
 
         .stat-card-value {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: #DC143C;
             margin-bottom: 0.5rem;
             position: relative;
             z-index: 1;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .stat-card-label {
@@ -137,6 +139,19 @@
             font-size: 1.2rem;
             opacity: 0.8;
             color: #DC143C;
+        }
+
+        /* Emphasize key cells */
+        .order-id { font-weight: 700; color: #DC143C; font-size: 1.05rem; }
+        .customer-info { font-weight: 700; color: #e8e8e8; font-size: 1.02rem; }
+
+        /* Highlight Total, Payment, Date cells: bold and white */
+        .table tbody td.col-total,
+        .table tbody td.col-payment,
+        .table tbody td.col-date {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 1.02rem;
         }
 
         /* Table Card */
@@ -373,28 +388,28 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="fas fa-power-off"></i> GIZMO Store</a>
             <div class="d-flex gap-3 flex-wrap">
-                <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line"></i> {{ __('messages.admin_nav_dashboard') }}</a>
                 @if(auth()->check() && (method_exists(auth()->user(), 'isMasterAdmin') && auth()->user()->isMasterAdmin() || method_exists(auth()->user(), 'hasAdminScope') && auth()->user()->hasAdminScope('orders')))
-                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> Orders</a>
+                    <a class="nav-link" href="{{ route('admin.orders.index') }}"><i class="fas fa-box"></i> {{ __('messages.admin_nav_orders') }}</a>
                 @endif
                 @php $u = auth()->user(); @endphp
                 @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('products')))
-                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> Products</a>
+                    <a class="nav-link" href="{{ route('product.index') }}"><i class="fas fa-cubes"></i> {{ __('messages.admin_nav_products') }}</a>
                 @endif
                 @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('categories')))
-                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> Categories</a>
+                    <a class="nav-link" href="{{ route('category.index') }}"><i class="fas fa-list"></i> {{ __('messages.admin_nav_categories') }}</a>
                 @endif
                 @if(auth()->check() && (method_exists($u,'isMasterAdmin') && $u->isMasterAdmin() || method_exists($u,'hasAdminScope') && $u->hasAdminScope('users')))
-                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> Users</a>
+                    <a class="nav-link" href="{{ route('users.index') }}"><i class="fas fa-users"></i> {{ __('messages.admin_nav_users') }}</a>
                 @endif
-                <a class="nav-link" href="/"><i class="fas fa-store"></i> View Store</a>
+                <a class="nav-link" href="/"><i class="fas fa-store"></i> {{ __('messages.nav_view_store') }}</a>
             </div>
         </div>
     </nav>
 
     <div class="container-fluid admin-container">
         <div class="admin-header">
-            <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+            <h1><i class="fas fa-chart-line"></i> {{ __('messages.admin_dashboard_title') }}</h1>
         </div>
 
         @if(session('success'))
@@ -409,25 +424,25 @@
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
                     <div class="stat-card-value">{{ $totalOrders }}</div>
-                    <div class="stat-card-label"><i class="fas fa-shopping-bag"></i> Total Orders</div>
+                    <div class="stat-card-label"><i class="fas fa-shopping-bag"></i> {{ __('messages.admin_total_orders') }}</div>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
                     <div class="stat-card-value">@currency($totalRevenue)</div>
-                    <div class="stat-card-label"><i class="fas fa-dollar-sign"></i> Total Revenue</div>
+                    <div class="stat-card-label"><i class="fas fa-dollar-sign"></i> {{ __('messages.admin_total_revenue') }}</div>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
                     <div class="stat-card-value">{{ $productsCount }}</div>
-                    <div class="stat-card-label"><i class="fas fa-box"></i> Products</div>
+                    <div class="stat-card-label"><i class="fas fa-box"></i> {{ __('messages.admin_products') }}</div>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stat-card">
                     <div class="stat-card-value">{{ $usersCount }}</div>
-                    <div class="stat-card-label"><i class="fas fa-users"></i> Customers</div>
+                    <div class="stat-card-label"><i class="fas fa-users"></i> {{ __('messages.admin_customers') }}</div>
                 </div>
             </div>
         </div>
@@ -437,7 +452,7 @@
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Stock Alerts:</strong>
-                {{ $outOfStockCount }} product(s) out of stock, {{ $lowStockProducts->count() }} product(s) low on stock (&lt;5)
+                {{ $outOfStockCount }} {{ __('messages.admin_out_of_stock') }}, {{ $lowStockProducts->count() }} {{ __('messages.admin_low_on_stock') }} (&lt;5)
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -445,28 +460,28 @@
         <!-- Recent Orders Section -->
         <div class="table-card">
             <div class="table-card-header">
-                <i class="fas fa-receipt"></i> Recent Orders
+                <i class="fas fa-receipt"></i> {{ __('messages.admin_recent_orders') }}
             </div>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Order #</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Action</th>
+                            <th>{{ __('messages.admin_table_order_id') }}</th>
+                            <th>{{ __('messages.admin_table_customer') }}</th>
+                            <th>{{ __('messages.admin_table_total') }}</th>
+                            <th>{{ __('messages.admin_table_status') }}</th>
+                            <th>{{ __('messages.admin_table_date') }}</th>
+                            <th>{{ __('messages.admin_table_actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recentOrders as $order)
                             <tr>
-                                <td><strong>#{{ $order->id }}</strong></td>
-                                <td>{{ $order->user->name }}</td>
-                                <td><strong>@currency($order->total)</strong></td>
-                                <td><span class="badge badge-{{ strtolower($order->status) }}">{{ ucfirst($order->status) }}</span></td>
-                                <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
+                                <td class="order-id"><strong>#{{ $order->id }}</strong></td>
+                                <td class="customer-info">{{ $order->user->name }}</td>
+                                <td class="col-total"><strong>@currency($order->total)</strong></td>
+                                <td><span class="badge badge-{{ strtolower($order->status) }}">{{ __('messages.admin_status_' . strtolower($order->status)) }}</span></td>
+                                <td class="col-date">{{ $order->created_at->format('M d, Y H:i') }}</td>
                                 <td>
                                     <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-outline-light" title="View Order">
                                         <i class="fas fa-eye"></i>
@@ -477,7 +492,7 @@
                             <tr>
                                 <td colspan="6" class="empty-state">
                                     <i class="fas fa-inbox"></i>
-                                    <p>No orders yet</p>
+                                    <p>{{ __('messages.admin_no_orders') }}</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -486,7 +501,7 @@
             </div>
             @if($totalOrders > 10)
                 <div class="p-3 text-center border-top">
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">View All Orders</a>
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">{{ __('messages.admin_view_all_orders') }}</a>
                 </div>
             @endif
         </div>

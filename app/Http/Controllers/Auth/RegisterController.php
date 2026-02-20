@@ -50,10 +50,10 @@ class RegisterController extends Controller
             \Log::error('Failed to create verification record: ' . $e->getMessage());
         }
 
-        // Log in the user but require phone verification before accessing account
+        // Log in the user
         Auth::login($user);
 
-        return redirect()->route('verify.show')->with('phone', $validated['phone']);
+        return redirect('/')->with('success', 'Registration successful! Welcome to Gizmo Store.');
     }
 }
 

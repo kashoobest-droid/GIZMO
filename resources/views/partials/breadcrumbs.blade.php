@@ -2,6 +2,11 @@
     $items = $items ?? [];
 @endphp
 @if(count($items) > 0)
+<style>
+    html.dark-mode .breadcrumb-item.active {
+        color: #ffffff !important;
+    }
+</style>
 <nav aria-label="breadcrumb" class="mb-2">
     <ol class="breadcrumb mb-0 small">
         @foreach($items as $i => $item)

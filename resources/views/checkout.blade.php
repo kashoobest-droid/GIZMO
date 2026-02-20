@@ -273,10 +273,6 @@
                             <hr>
                             <div class="mb-3">
                                 <label class="form-label small"><i class="fas fa-credit-card me-1"></i> Payment Method</label>
-                                @php
-                                    $city = strtolower(trim(auth()->user()->city_area ?? ''));
-                                    $codAvailable = (strpos($city, 'port') !== false) || (strpos($city, 'port sudan') !== false) || (strpos($city, 'portsudan') !== false);
-                                @endphp
                                 <div class="d-flex flex-column">
                                     <!-- Card (online) temporarily disabled -->
                                     <div class="form-check mt-2">
@@ -285,7 +281,7 @@
                                     </div>
                                     <div class="form-check mt-2">
                                         <input class="form-check-input" type="radio" name="payment_method" id="pm_cod" value="cod" {{ old('payment_method') === 'cod' ? 'checked' : '' }} {{ $codAvailable ? '' : 'disabled' }}>
-                                        <label class="form-check-label" for="pm_cod">Cash on Delivery (COD) @if(! $codAvailable) <small class="text-muted">(Only Port Sudan)</small> @endif</label>
+                                        <label class="form-check-label" for="pm_cod">Cash on Delivery (COD) @if(! $codAvailable) <small class="text-muted">({{ $codMessage ?? 'Not available' }})</small> @endif</label>
                                     </div>
                                     @error('payment_method')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </div>
@@ -303,7 +299,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Upload Transfer Screenshot</label>
                                     <input type="file" name="receipt" accept="image/*" class="form-control @error('receipt') is-invalid @enderror">
-                                    @error('receipt')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    @error('receipt')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </div>
                             </div>
                         <div class="mb-3">
@@ -360,6 +356,59 @@
         document.addEventListener('DOMContentLoaded', initializeDarkMode);
     </script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const saveBtn = document.getElementById('saveAddressBtn');
+            if (!saveBtn) return;
+
+            saveBtn.addEventListener('click', async function () {
+                const get = (name) => document.querySelector('[name="' + name + '"]')?.value || '';
+                const payload = {
+                    country: get('country'),
+                    street_name: get('street_name'),
+                    building_name: get('building_name'),
+                    floor_apartment: get('floor_apartment'),
+                    landmark: get('landmark'),
+                    city_area: get('city_area'),
+                    phone: get('phone') || document.getElementById('address_phone')?.value || ''
+                };
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                saveBtn.disabled = true;
+                try {
+                    const res = await fetch("{{ route('profile.address.save') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        // refresh to let server recalc `needsAddress` and show updated address
+                        window.location.reload();
+                        return;
+                    }
+
+                    if (res.status === 422) {
+                        const data = await res.json();
+                        const errs = data.errors ? Object.values(data.errors).flat().join('\n') : JSON.stringify(data);
+                        alert(errs);
+                        return;
+                    }
+
+                    const txt = await res.text();
+                    alert('Failed to save address: ' + txt);
+                } catch (err) {
+                    alert('Network error while saving address.');
+                } finally {
+                    saveBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+    <script>
         // Payment method toggle logic
         function updatePaymentFields() {
             const bankakFields = document.getElementById('bankakFields');
@@ -372,6 +421,8 @@
             const radios = document.querySelectorAll('input[name="payment_method"]');
             radios.forEach(r => r.addEventListener('change', updatePaymentFields));
             updatePaymentFields();
+
+            // Legacy: no client-side signed upload behavior; server will accept `receipt` file input
         });
     </script>
     

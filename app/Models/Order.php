@@ -22,6 +22,8 @@ class Order extends Model
         'payment_status',
         'transaction_id',
         'receipt_path',
+        'receipt_url',
+        'receipt_public_id',
         'payment_received_amount',
     ];
 

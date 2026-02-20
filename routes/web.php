@@ -77,6 +77,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index')->middleware('admin.scope:orders');
+        Route::get('/orders/{order}/signed-receipt', [OrderController::class, 'signedReceipt'])->name('orders.signedReceipt')->middleware('admin.scope:orders');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('admin.scope:orders');
         Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->name('orders.approvePayment')->middleware('admin.scope:orders');
         Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.rejectPayment')->middleware('admin.scope:orders');
@@ -91,8 +92,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('admin/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy')->middleware('admin.scope:coupons');
 });
 
-// Profile routes
-Route::middleware(['auth', 'phone.verified'])->group(function () {
+// Profile routes (phone verification now optional, can be done via checkout or profile page)
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/phone/send', [ProfileController::class, 'sendPhoneOtp'])->name('profile.phone.send');
@@ -107,6 +108,7 @@ Route::middleware(['auth', 'phone.verified'])->group(function () {
 
     // Order routes
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
+    
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

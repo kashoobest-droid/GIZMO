@@ -16,12 +16,25 @@ class OrderShipped extends Mailable implements ShouldQueue
 
     public function __construct(
         public Order $order
-    ) {}
+    ) {
+        // Set locale to user's preferred language for email content
+        if ($order->user && $order->user->locale) {
+            $this->locale = $order->user->locale;
+        } elseif (app()->getLocale()) {
+            $this->locale = app()->getLocale();
+        }
+    }
 
     public function envelope(): Envelope
     {
+        // Subject in user's language
+        $locale = $this->locale ?? app()->getLocale();
+        $subject = $locale === 'ar'
+            ? 'الخبر السارّ! تم شحن الطلب رقم ' . $this->order->id . ' - متجر جيزمو'
+            : 'Good News! Order #' . $this->order->id . ' Shipped - GIZMO Store';
+
         return new Envelope(
-            subject: 'Good News! Order #' . $this->order->id . ' Shipped - GIZMO Store',
+            subject: $subject,
             from: config('mail.from.address'),
             replyTo: [config('mail.from.address')],
         );

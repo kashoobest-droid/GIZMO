@@ -156,9 +156,35 @@ class ProfileController extends Controller
         }
 
         $phoneChanged = array_key_exists('phone', $validated) && $validated['phone'] && $validated['phone'] !== $user->phone;
+        $emailChanged = array_key_exists('email', $validated) && $validated['email'] && $validated['email'] !== $user->email;
 
         // Save profile fields (avatar handled above)
         $user->update($validated);
+
+        // If the user changed their email, invalidate sessions for security
+        if ($emailChanged) {
+            try {
+                // Clear remember_token so "remember me" cookies are invalidated
+                $user->remember_token = null;
+                $user->save();
+
+                // If app uses database sessions and sessions table stores user_id, remove those sessions
+                if (config('session.driver') === 'database' && \Schema::hasTable('sessions')) {
+                    if (\Schema::hasColumn('sessions', 'user_id')) {
+                        \DB::table('sessions')->where('user_id', $user->id)->delete();
+                    } else {
+                        // Fallback: try to remove sessions whose payload mentions this user id (best-effort)
+                        \DB::table('sessions')->where('payload', 'like', '%"user_id"%;s:'.strlen($user->id).':"'.$user->id.'"%')->delete();
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to clear sessions on email change: ' . $e->getMessage(), ['user_id' => $user->id]);
+            }
+
+            // Logout current session and require re-login
+            Auth::logout();
+            return redirect('/')->with('success', 'Email updated — all sessions have been signed out for security. Please login again.');
+        }
 
         // If phone changed, generate OTP and create verification record (send via Twilio if available, otherwise log)
         if ($phoneChanged) {

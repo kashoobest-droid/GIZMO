@@ -89,6 +89,14 @@
             color: #ffffff !important;
         }
 
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        html.dark-mode .text-muted {
+            color: #e8e8e8 !important;
+        }
+
         .form-select {
             background-color: var(--bg-secondary);
             border-color: var(--border-color);
@@ -167,13 +175,13 @@
                                 @method('PATCH')
                                 <select name="status" class="form-select form-select-sm d-inline-block" style="width:auto;" onchange="this.form.submit()">
                                     @foreach(['pending','processing','shipped','delivered','cancelled'] as $s)
-                                        <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                                        <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ __('messages.admin_status_' . $s) }}</option>
                                     @endforeach
                                 </select>
                             </form>
                         @endif
                     @endauth
-                    <span class="badge bg-{{ $order->status_badge_class }} fs-6">{{ ucfirst($order->status) }}</span>
+                    <span class="badge bg-{{ $order->status_badge_class }} fs-6">{{ __('messages.admin_status_' . $order->status) }}</span>
                 </div>
             </div>
             <p class="text-muted mb-3">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>

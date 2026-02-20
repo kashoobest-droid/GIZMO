@@ -97,8 +97,8 @@
         html.dark-mode .badge { background-color: #2a2a2a !important; color: #b0b0b0 !important; }
         html.dark-mode .btn-secondary { background-color: #2a2a2a; border-color: #3a3a3a; color: #e0e0e0; }
         html.dark-mode .btn-secondary:hover { background-color: #3a3a3a; border-color: #4a4a4a; color: #ffffff; }
-        html.dark-mode .btn-success { background-color: #1a4d2e; border-color: #28a745; }
-        html.dark-mode .form-control, html.dark-mode .form-select { background-color: #2a2a2a; border-color: #3a3a3a; color: #e0e0e0; }
+        html.dark-mode .btn-success { background-color: #1a4d2e; border-color: #28a745; }        html.dark-mode a.text-muted { color: #ffffff !important; }
+        html.dark-mode a.text-muted:hover { color: #DC143C !important; }        html.dark-mode .form-control, html.dark-mode .form-select { background-color: #2a2a2a; border-color: #3a3a3a; color: #e0e0e0; }
         html.dark-mode .form-control:focus, html.dark-mode .form-select:focus { border-color: #DC143C; box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25); }
         html.dark-mode .alert { background-color: #1a1a1a; border-color: #2a2a2a; color: #e0e0e0; }
         html.dark-mode .alert-info { background-color: #1a2a3a; border-color: #2a4a5a; color: #ffffff; }

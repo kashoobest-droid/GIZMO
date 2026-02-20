@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LocaleController extends Controller
 {
@@ -23,6 +24,11 @@ class LocaleController extends Controller
 
         // Also set the app locale
         app()->setLocale($locale);
+
+        // If user is authenticated, save their locale preference to database
+        if (Auth::check()) {
+            Auth::user()->update(['locale' => $locale]);
+        }
 
         // Store in cookie for persistence (expires in 1 year)
         cookie()->queue(

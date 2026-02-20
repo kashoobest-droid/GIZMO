@@ -26,10 +26,12 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Receipt / Screenshot (image or PDF)</label>
-                    <input type="file" name="receipt" accept="image/*,.pdf" class="form-control">
-                    @if($order->receipt_path)
-                        <small class="text-muted">Current receipt: <a href="{{ (str_starts_with($order->receipt_path, 'http') ? $order->receipt_path : asset('storage/' . ltrim($order->receipt_path, '/'))) }}" target="_blank">View</a></small>
+                    <label class="form-label">Receipt / Screenshot (image)</label>
+                    <input type="file" name="receipt" accept="image/*" class="form-control">
+                    @if(!empty($order->receipt_url))
+                        <small class="text-muted">Current receipt: <a href="{{ $order->receipt_url }}" target="_blank" rel="noopener">View</a></small>
+                    @elseif(!empty($order->receipt_path))
+                        <small class="text-muted">Current receipt: <a href="{{ (str_starts_with($order->receipt_path, 'http') ? $order->receipt_path : asset('storage/' . ltrim($order->receipt_path, '/'))) }}" target="_blank" rel="noopener">View</a></small>
                     @endif
                 </div>
 

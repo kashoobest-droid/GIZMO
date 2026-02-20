@@ -16,12 +16,25 @@ class OrderConfirmed extends Mailable implements ShouldQueue
 
     public function __construct(
         public Order $order
-    ) {}
+    ) {
+        // Set locale to user's preferred language for email content
+        if ($order->user && $order->user->locale) {
+            $this->locale = $order->user->locale;
+        } elseif (app()->getLocale()) {
+            $this->locale = app()->getLocale();
+        }
+    }
 
     public function envelope(): Envelope
     {
+        // Subject in user's language
+        $locale = $this->locale ?? app()->getLocale();
+        $subject = $locale === 'ar' 
+            ? 'تأكيد الطلب رقم ' . $this->order->id . ' - متجر جيزمو'
+            : 'Order #' . $this->order->id . ' Confirmed - GIZMO Store';
+
         return new Envelope(
-            subject: 'Order #' . $this->order->id . ' Confirmed - GIZMO Store',
+            subject: $subject,
             from: config('mail.from.address'),
             replyTo: [config('mail.from.address')],
         );
@@ -31,6 +44,9 @@ class OrderConfirmed extends Mailable implements ShouldQueue
     {
         return new Content(
             view: 'emails.order-confirmed',
+            with: [
+                'orderNumber' => $this->order->id,
+            ]
         );
     }
 

@@ -40,7 +40,7 @@
         <h2 class="mb-4">Order #{{ $order->id }}</h2>
         <div class="card shadow-sm mb-3">
             <div class="card-body">
-                <p class="mb-0"><strong>Status:</strong> <span class="badge bg-{{ $order->status_badge_class }}">{{ ucfirst($order->status) }}</span></p>
+                <p class="mb-0"><strong>Status:</strong> <span class="badge bg-{{ $order->status_badge_class }}">{{ __('messages.admin_status_' . $order->status) }}</span></p>
                 <p class="mb-0 mt-2"><strong>Total:</strong> ${{ number_format($order->total, 2) }}</p>
                 @if($order->discount > 0)
                     <p class="mb-0 small text-success">Discount applied: -${{ number_format($order->discount, 2) }}</p>

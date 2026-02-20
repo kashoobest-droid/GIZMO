@@ -393,7 +393,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="price" class="form-label"><i class="fas fa-price-tag"></i> Price (USD)</label>
+                                <label for="price" class="form-label"><i class="fas fa-price-tag"></i> Price (SDG)</label>
                                 <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" placeholder="0.00" required value="{{ old('price') }}">
                                 <small class="form-text">Enter the selling price</small>
                                 @error('price')
