@@ -417,7 +417,12 @@
                                     <div class="carousel-inner">
                                         @foreach($product->images as $img)
                                             <div class="carousel-item @if($loop->first) active @endif">
-                                                <img src="{{ filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path) }}" alt="Product Image">
+                                                @include('partials.optimized_image', [
+                                                    'src' => filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path),
+                                                    'alt' => 'Product Image',
+                                                    'class' => '',
+                                                    'sizes' => '300px',
+                                                ])
                                             </div>
                                         @endforeach
                                     </div>

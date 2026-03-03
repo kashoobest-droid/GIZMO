@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
@@ -47,7 +48,7 @@ class RegisterController extends Controller
             ]);
         } catch (\Throwable $e) {
             // don't block registration on OTP persistence failure; log and continue
-            \Log::error('Failed to create verification record: ' . $e->getMessage());
+            Log::channel('orders')->error('Failed to create verification record: ' . $e->getMessage());
         }
 
         // Log in the user

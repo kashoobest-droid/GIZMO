@@ -193,7 +193,12 @@
                         <tr>
                             <td class="align-middle" style="width:80px;">
                                 @if($item->product && $item->product->images->first())
-                                    <img src="{{ filter_var($item->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $item->product->images->first()->image_path : asset($item->product->images->first()->image_path) }}" alt="" class="item-img">
+                                    @include('partials.optimized_image', [
+                                        'src' => filter_var($item->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $item->product->images->first()->image_path : asset($item->product->images->first()->image_path),
+                                        'alt' => $item->product->name,
+                                        'class' => 'item-img',
+                                        'sizes' => '60px',
+                                    ])
                                 @else
                                     <img src="https://via.placeholder.com/60?text=No+Image" alt="" class="item-img">
                                 @endif

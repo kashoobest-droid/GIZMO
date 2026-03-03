@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class NotifyStockBackJob implements ShouldQueue
 {
@@ -32,7 +33,7 @@ class NotifyStockBackJob implements ShouldQueue
                 Mail::send(new StockBackNotification($this->product, $notification->email));
                 $notification->update(['notified' => true]);
             } catch (\Throwable $e) {
-                \Log::error('Stock notification email failed for ' . $notification->email . ': ' . $e->getMessage());
+                Log::channel('orders')->error('Stock notification email failed for ' . $notification->email . ': ' . $e->getMessage());
                 report($e);
             }
         }

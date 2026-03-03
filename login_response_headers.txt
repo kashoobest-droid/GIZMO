@@ -1,0 +1,20 @@
+HTTP/1.1 302 Found
+Host: 127.0.0.1:8000
+Connection: close
+X-Powered-By: PHP/8.3.30
+Cache-Control: no-cache, private
+Date: Tue, 24 Feb 2026 11:59:07 GMT
+Location: http://127.0.0.1:8000
+Content-Type: text/html; charset=utf-8
+Set-Cookie: locale=eyJpdiI6ImpabUlQMTMyMis5ckJ3eWJYUE9kRVE9PSIsInZhbHVlIjoiWkRzSEFlYXZNcWFqR2pZRVRLVXNJUTJrSXRXcnJPelRIUGkyamVMTWF2cmNiTWdmSzRBaktRb2I4dzIvaHVMZyIsIm1hYyI6ImUwYmQ2NDRiMTc0MTM2NWM2MzBkNTEzMjljNTg2ZjJjYTM2Mzg4YzU4NGMxYTZkNGY5YjQzZDQyMzYxY2Q0YWIiLCJ0YWciOiIifQ%3D%3D; expires=Sat, 09 Feb 2086 11:59:07 GMT; Max-Age=1892160000; path=/; httponly; samesite=lax
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IjUxc29zWXpwbGtDQ05QRkgxanpacEE9PSIsInZhbHVlIjoiRjZJV3BaK0llTWhodDVkUkpxTGtleHg0RUdsRkl1WjI1T2poSjBtaVRycFludVRrdlUzeTFmRFdYLy9tRi9xYlpPZFM1S2tnaDlIME5HNHRqSUJWaVQ2eGJ1NS9xbHdUTGNvUnltRTlsaXEzNU1YYTRuZWRtQlp2RE1IVUZqSm0iLCJtYWMiOiI3YTNhYTM2ZDRhZjk0NjcwNTFhZDBmYzE0YzliOTJjMzhkZDFjNzkyYjllODc2MDBiMDNmNzM3M2E1ZTIyNGM4IiwidGFnIjoiIn0%3D; expires=Tue, 24 Feb 2026 13:59:07 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: gizmo_sd_session=eyJpdiI6Ii9JZ0NoYnlvcHVuZzJVRW5QR1IvblE9PSIsInZhbHVlIjoiazZ1dGJjNmpuMmhsNXVwbTFpUFlFVzd6V1Q3V0h0OVc4VkNsMFRlNGp2MnV4N0NBOVFDR2g1MU9wczBRN1ZhdDVIcDl6MFB0ekFKRXpYZDNLakx3Z0NRMGwxTzRUNU10ajhpVVVFYXAza3BaWGU1am1GYmJNa3JLR01PV1ZxaTQiLCJtYWMiOiJmMTY2ZDI0MTRlMWJkY2Y2NWMyZDY1MjUzODA4NzQ3MDU2ZTEwOWQ3YWEwNTBjYzcxNjFjNmM3NzQ1NDRlMjI2IiwidGFnIjoiIn0%3D; expires=Tue, 24 Feb 2026 13:59:07 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+
+HTTP/1.0 500 Internal Server Error
+Host: 127.0.0.1:8000
+Connection: close
+X-Powered-By: PHP/8.3.30
+Cache-Control: no-cache, private
+Date: Tue, 24 Feb 2026 11:59:07 GMT
+Content-type: text/html; charset=UTF-8
+

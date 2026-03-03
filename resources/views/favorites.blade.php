@@ -163,7 +163,12 @@
                         <div class="fav-card h-100">
                             <a href="{{ route('product.show', $fav->product) }}" class="text-decoration-none text-dark">
                                 @if($fav->product->images->first())
-                                    <img src="{{ filter_var($fav->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $fav->product->images->first()->image_path : asset($fav->product->images->first()->image_path) }}" class="fav-img w-100" alt="{{ $fav->product->name }}">
+                                    @include('partials.optimized_image', [
+                                        'src' => filter_var($fav->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $fav->product->images->first()->image_path : asset($fav->product->images->first()->image_path),
+                                        'alt' => $fav->product->name,
+                                        'class' => 'fav-img w-100',
+                                        'sizes' => '150px',
+                                    ])
                                 @else
                                     <img src="https://via.placeholder.com/300x180?text=No+Image" class="fav-img w-100" alt="">
                                 @endif

@@ -25,12 +25,14 @@ class Order extends Model
         'receipt_url',
         'receipt_public_id',
         'payment_received_amount',
+        'stock_restored',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
         'discount' => 'decimal:2',
         'payment_received_amount' => 'decimal:2',
+        'stock_restored' => 'boolean',
     ];
 
     public function user()

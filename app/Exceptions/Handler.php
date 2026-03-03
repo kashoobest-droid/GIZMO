@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -26,7 +27,7 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             // Log all exceptions securely
-            \Log::error('Application Exception', [
+            Log::channel('orders')->error('Application Exception', [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),

@@ -116,7 +116,7 @@ class OrderController extends Controller
             $apiSecret = config('cloudinary.api.secret');
             
             if (!$cloudName || !$apiKey || !$apiSecret) {
-                \Log::error('Cloudinary config missing', [
+                Log::channel('orders')->error('Cloudinary config missing', [
                     'cloud_name' => !$cloudName,
                     'api_key' => !$apiKey,
                     'api_secret' => !$apiSecret,
@@ -133,7 +133,7 @@ class OrderController extends Controller
             // Sign the request using Cloudinary SDK
             $signature = Cloudinary::apiSignRequest($params, $apiSecret);
             
-            \Log::info('Cloudinary signature generated', [
+            Log::channel('orders')->info('Cloudinary signature generated', [
                 'timestamp' => $timestamp,
                 'folder' => $folder,
                 'signature' => substr($signature, 0, 10) . '...',
@@ -148,7 +148,7 @@ class OrderController extends Controller
                 'success' => true,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error generating Cloudinary signature', [
+            Log::channel('orders')->error('Error generating Cloudinary signature', [
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id(),
             ]);
@@ -189,14 +189,14 @@ class OrderController extends Controller
         } catch (\Throwable $e) {
             // ignore refresh failures
         }
-        Log::info('OrderController@store called', ['user_id' => $user?->id, 'phone' => $user?->phone]);
+        Log::channel('orders')->info('OrderController@store called', ['user_id' => $user?->id, 'phone' => $user?->phone]);
         $cartItems = $user->cartItems()->with('product')->get();
 
         // Normalize transaction_id if JS/form submitted it as an array by mistake
         if ($request->has('transaction_id') && is_array($request->input('transaction_id'))) {
             $first = $request->input('transaction_id')[0] ?? null;
             $request->merge(['transaction_id' => $first]);
-            Log::warning('transaction_id received as array; coerced to string', ['user_id' => $user->id ?? null, 'transaction_id_first' => $first]);
+            Log::channel('orders')->warning('transaction_id received as array; coerced to string', ['user_id' => $user->id ?? null, 'transaction_id_first' => $first]);
         }
 
         // Enforce phone verification before allowing checkout.
@@ -231,7 +231,7 @@ class OrderController extends Controller
         if (! $hasVerifiedPhone) {
             // Phone verification temporarily disabled for checkout flow.
             // Previously this returned an error to force OTP verification.
-            Log::info('Checkout phone verification skipped for user', ['user_id' => $user->id, 'phone' => $phone]);
+            Log::channel('orders')->info('Checkout phone verification skipped for user', ['user_id' => $user->id, 'phone' => $phone]);
         }
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
@@ -358,7 +358,7 @@ class OrderController extends Controller
                         $path = Storage::disk('cloudinary')->putFileAs($folder, $file, $filename);
                         $receiptUrl = \App\Helpers\CloudinaryHelper::getUrl($path);
 
-                        Log::info('Cloudinary upload (checkout) success', ['path' => $path, 'receipt_url' => $receiptUrl, 'order_id' => $order->id ?? null]);
+                        Log::channel('orders')->info('Cloudinary upload (checkout) success', ['path' => $path, 'receipt_url' => $receiptUrl, 'order_id' => $order->id ?? null]);
 
                         // Persist receipt info on the order record
                         $order->receipt_path = $path;
@@ -368,7 +368,7 @@ class OrderController extends Controller
                     } catch (\Throwable $e) {
                         // log but do not abort; keep order creation going
                         report($e);
-                        Log::error('Cloudinary upload failed during order create', ['error' => $e->getMessage(), 'order_id' => $order->id ?? null, 'user_id' => $user->id ?? null]);
+                        Log::channel('orders')->error('Cloudinary upload failed during order create', ['error' => $e->getMessage(), 'order_id' => $order->id ?? null, 'user_id' => $user->id ?? null]);
                         // Fallback: store receipt to public disk so admin can access via /storage
                         try {
                             $fileFallback = $request->file('receipt');
@@ -377,7 +377,7 @@ class OrderController extends Controller
                                 $order->receipt_path = $localPath;
                                 // Use Storage facade with explicit 'public' disk to avoid cloudinary
                                 $order->receipt_url = \Illuminate\Support\Facades\Storage::disk('public')->url($localPath);
-                                Log::info('Stored receipt fallback to public disk', ['local_path' => $localPath, 'receipt_url' => $order->receipt_url, 'order_id' => $order->id ?? null]);
+                                Log::channel('orders')->info('Stored receipt fallback to public disk', ['local_path' => $localPath, 'receipt_url' => $order->receipt_url, 'order_id' => $order->id ?? null]);
                                 $order->save();
                             }
                         } catch (\Throwable $inner) {
@@ -414,7 +414,7 @@ class OrderController extends Controller
 
         // Log order payment method for admin visibility and debugging
         try {
-            Log::info('Order created', ['order_id' => $order->id ?? null, 'payment_method' => $order->payment_method ?? $paymentMethod]);
+            Log::channel('orders')->info('Order created', ['order_id' => $order->id ?? null, 'payment_method' => $order->payment_method ?? $paymentMethod]);
         } catch (\Throwable $e) {
             // don't break order flow if logging fails
             report($e);
@@ -629,16 +629,17 @@ class OrderController extends Controller
         ]);
 
         $newStatus = $request->status;
+        $oldStatus = $order->status;
 
         // Security: Ensure the order ID from the route parameter matches what we're trying to update
         if (!$order || !$order->id) {
-            \Log::warning('updateStatus called with invalid order', ['order' => $order, 'admin_id' => \Auth::id()]);
+            Log::channel('orders')->warning('updateStatus called with invalid order', ['order' => $order, 'admin_id' => \Auth::id()]);
             return back()->with('error', 'Invalid order. Order not found.');
         }
 
         // Prevent redundant updates (if status hasn't actually changed)
         if ($order->status === $newStatus) {
-            \Log::info('updateStatus called with same status (no-op)', [
+            Log::channel('orders')->info('updateStatus called with same status (no-op)', [
                 'order_id' => $order->id,
                 'status' => $newStatus,
                 'admin_id' => \Auth::id(),
@@ -647,7 +648,7 @@ class OrderController extends Controller
         }
 
         // Log the status change for audit trail BEFORE making any changes
-        \Log::info('Order status change requested', [
+        Log::channel('orders')->info('Order status change requested', [
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'new_status' => $newStatus,
@@ -667,11 +668,45 @@ class OrderController extends Controller
                 $updates['payment_status'] = $order->payment_status ?? 'paid';
             }
 
-            $order->update($updates);
-            \Log::info('Order marked as delivered', ['order_id' => $order->id, 'admin_id' => \Auth::id()]);
+            try {
+                DB::transaction(function () use ($order, $updates) {
+                    $order->update($updates);
+                });
+                Log::channel('orders')->info('Order marked as delivered', ['order_id' => $order->id, 'admin_id' => \Auth::id()]);
+            } catch (\Throwable $e) {
+                Log::channel('orders')->error('Failed to mark order delivered in transaction', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+                return back()->with('error', 'Failed to update order status.');
+            }
         } else {
+            // If cancelling an order that hasn't been shipped/delivered yet,
+            // restore the product quantities back to stock.
+            if ($newStatus === 'cancelled') {
+                try {
+                    DB::transaction(function () use ($order, $oldStatus, $newStatus) {
+                        // Only restore if not already restored and order wasn't shipped/delivered/cancelled
+                        if (empty($order->stock_restored) && ! in_array($oldStatus, ['cancelled', 'shipped', 'delivered'])) {
+                            $order->load('items.product');
+                            foreach ($order->items as $item) {
+                                if ($item->product) {
+                                    $item->product->increment('quantity', $item->quantity);
+                                }
+                            }
+                        }
+
+                        $order->update(['status' => $newStatus, 'stock_restored' => true]);
+                    });
+
+                    Log::channel('orders')->info('Order cancelled and stock restored (if applicable)', ['order_id' => $order->id, 'old_status' => $oldStatus, 'admin_id' => \Auth::id()]);
+                } catch (\Throwable $e) {
+                    Log::channel('orders')->error('Failed to cancel order and restore stock', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+                    return back()->with('error', 'Failed to update order status.');
+                }
+
+                return back()->with('success', 'Order status updated to ' . __('messages.admin_status_' . $newStatus) . '.');
+            }
+
             $order->update(['status' => $newStatus]);
-            \Log::info('Order status updated', ['order_id' => $order->id, 'new_status' => $newStatus, 'admin_id' => \Auth::id()]);
+            Log::channel('orders')->info('Order status updated', ['order_id' => $order->id, 'new_status' => $newStatus, 'admin_id' => \Auth::id()]);
 
             // If order moved to shipped, notify the customer
             if ($newStatus === 'shipped') {
@@ -696,37 +731,42 @@ class OrderController extends Controller
             return back()->with('error', 'This order is not a Bankak payment.');
         }
 
-        $order->update([
-            'payment_status' => 'verified',
-            'status' => 'processing',
-        ]);
-
-        // Generate PDF invoice and attach to approval email (using DomPDF - improved setup for Arabic)
+        // Wrap payment update and invoice generation in a DB transaction to avoid partial failures
         $pdfData = null;
         $filename = 'invoice-' . $order->id . '.pdf';
         try {
-            $fresh = $order->fresh(['items.product', 'user']);
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.order-invoice', ['order' => $fresh]);
-            $pdfData = $pdf->output();
-            // Base64-encode the PDF so it remains valid UTF-8 when passed through transports/logging
-            $pdfData = base64_encode($pdfData);
-            \Log::info('Invoice PDF generated successfully for order ' . $order->id, ['size' => strlen($pdfData)]);
+            DB::transaction(function () use ($order, &$pdfData, $filename) {
+                // Update order payment status and processing status
+                $order->update([
+                    'payment_status' => 'verified',
+                    'status' => 'processing',
+                ]);
+
+                // Generate PDF invoice inside transaction; if generation fails, transaction will roll back
+                $fresh = $order->fresh(['items.product', 'user']);
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.order-invoice', ['order' => $fresh]);
+                $pdfDataLocal = $pdf->output();
+                // Base64-encode the PDF so it remains valid UTF-8 when passed through transports/logging
+                $pdfData = base64_encode($pdfDataLocal);
+                Log::channel('payments')->info('Invoice PDF generated successfully for order ' . $order->id, ['size' => strlen($pdfData ?? '')]);
+            });
         } catch (\Throwable $e) {
-            \Log::error('Failed to generate PDF for order ' . $order->id, [
+            Log::channel('payments')->error('Failed to verify payment or generate invoice for order ' . $order->id, [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            $pdfData = null;
+            // Return with error to indicate operation did not complete
+            return back()->with('error', 'Failed to verify payment. No changes were saved.');
         }
 
-        // Send payment approved email with invoice attached when available
+        // Send payment approved email with invoice attached when available (outside transaction)
         try {
-            // Attempt to send immediately (helps debug delivery issues when queue driver is sync)
             Mail::to($order->user->email)->send(new \App\Mail\PaymentApproved($order->fresh(['items', 'user']), $pdfData, $filename));
-            \Log::info('PaymentApproved email sent (attempted) for order ' . $order->id, ['email' => $order->user->email]);
+            Log::channel('payments')->info('PaymentApproved email sent (attempted) for order ' . $order->id, ['email' => $order->user->email]);
         } catch (\Throwable $e) {
             report($e);
-            \Log::error('Failed sending PaymentApproved email for order ' . $order->id, ['exception' => $e->getMessage()]);
+            Log::channel('payments')->error('Failed sending PaymentApproved email for order ' . $order->id, ['exception' => $e->getMessage()]);
+            // Email failure should not rollback payment verification; log and inform admin if needed
         }
 
         return back()->with('success', 'Payment verified and order moved to processing.');
@@ -800,10 +840,17 @@ class OrderController extends Controller
             }
         }
 
-        // Update transaction id and set payment_status back to awaiting admin review
-        $order->transaction_id = $data['transaction_id'];
-        $order->payment_status = 'awaiting_admin_approval';
-        $order->save();
+        // Persist transaction id, receipt info and set payment_status back to awaiting admin review
+        try {
+            DB::transaction(function () use ($order, $data) {
+                $order->transaction_id = $data['transaction_id'];
+                $order->payment_status = 'awaiting_admin_approval';
+                $order->save();
+            });
+        } catch (\Throwable $e) {
+            Log::error('Failed to save payment update transaction for order ' . $order->id, ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to submit payment update. Please try again.');
+        }
 
         // Optionally notify admin here (left to ops)
 
@@ -840,7 +887,26 @@ class OrderController extends Controller
             // If Schema is not accessible for some reason, skip adding the column
         }
 
-        $order->update($updates);
+        $oldStatus = $order->status;
+
+                try {
+                    DB::transaction(function () use ($order, $updates, $oldStatus) {
+                        // Only restore if not already restored and order wasn't shipped/delivered/cancelled
+                        if (empty($order->stock_restored) && ! in_array($oldStatus, ['cancelled', 'shipped', 'delivered'])) {
+                            $order->load('items.product');
+                            foreach ($order->items as $item) {
+                                if ($item->product) {
+                                    $item->product->increment('quantity', $item->quantity);
+                                }
+                            }
+                        }
+
+                        $order->update(array_merge($updates, ['stock_restored' => true]));
+                    });
+                } catch (\Throwable $e) {
+                    Log::channel('orders')->error('Failed to reject payment and restore stock', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+                    return back()->with('error', 'Failed to reject payment.');
+                }
 
         // Build a temporary signed edit link so customer can securely resubmit payment details
         try {

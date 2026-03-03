@@ -378,7 +378,12 @@
                         <div class="carousel-inner">
                             @foreach($product->images as $img)
                                 <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
-                                    <img src="{{ filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path) }}" class="d-block w-100 product-detail-img" alt="{{ $product->name }}">
+                                    @include('partials.optimized_image', [
+                                        'src' => filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path),
+                                        'alt' => $product->name,
+                                        'class' => 'd-block w-100 product-detail-img',
+                                        'sizes' => '(min-width:1200px) 800px, (min-width:768px) 600px, 100vw',
+                                    ])
                                 </div>
                             @endforeach
                         </div>
@@ -504,7 +509,12 @@
                     <a href="{{ route('product.show', $rel) }}" class="text-decoration-none text-dark">
                         <div class="card h-100">
                             @if($rel->images->first())
-                                <img src="{{ filter_var($rel->images->first()->image_path, FILTER_VALIDATE_URL) ? $rel->images->first()->image_path : asset($rel->images->first()->image_path) }}" class="card-img-top" style="height:160px;object-fit:cover" alt="">
+                                @include('partials.optimized_image', [
+                                    'src' => filter_var($rel->images->first()->image_path, FILTER_VALIDATE_URL) ? $rel->images->first()->image_path : asset($rel->images->first()->image_path),
+                                    'alt' => $rel->name ?? '',
+                                    'class' => 'card-img-top',
+                                    'sizes' => '200px',
+                                ])
                             @else
                                 <img src="https://via.placeholder.com/200x160?text=No+Image" class="card-img-top" style="height:160px;object-fit:cover" alt="">
                             @endif

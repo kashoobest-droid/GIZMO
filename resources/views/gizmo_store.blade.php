@@ -1507,7 +1507,12 @@
                                             <div class="carousel-inner h-100">
                                                 @foreach($product->images as $img)
                                                     <div class="carousel-item @if($loop->first) active @endif h-100">
-                                                        <img src="{{ filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path) }}" class="d-block w-100" alt="{{ $product->name }}">
+                                                        @include('partials.optimized_image', [
+                                                            'src' => filter_var($img->image_path, FILTER_VALIDATE_URL) ? $img->image_path : asset($img->image_path),
+                                                            'alt' => $product->name,
+                                                            'class' => 'd-block w-100',
+                                                            'sizes' => '(min-width:1200px) 600px, (min-width:768px) 400px, 100vw',
+                                                        ])
                                                     </div>
                                                 @endforeach
                                             </div>
@@ -1926,6 +1931,11 @@
             <hr class="border-secondary">
             <div class="text-center">
                 <p>&copy; {{ __('messages.copyright') }} | <a href="#">{{ __('messages.privacy_policy') }}</a> | <a href="#">{{ __('messages.terms_of_service') }}</a></p>
+                <div style="margin-top: 15px; padding: 12px 20px; background: linear-gradient(135deg, #DC143C 0%, #FF6B6B 100%); border-radius: 8px; display: inline-block; box-shadow: 0 4px 15px rgba(220, 20, 60, 0.4);">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: white; letter-spacing: 0.8px;">
+                        <i class="fas fa-code"></i> Developed by <span style="font-style: italic; font-weight: 700;">Mustafa (KASHOO)</span> <i class="fas fa-code"></i>
+                    </p>
+                </div>
             </div>
         </div>
     </footer>

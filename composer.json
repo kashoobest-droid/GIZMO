@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.8",
         "mpdf/mpdf": "^6.1",
+        "predis/predis": "^3.4",
         "resend/resend-laravel": "^1.2",
         "twilio/sdk": "^8.11"
     },

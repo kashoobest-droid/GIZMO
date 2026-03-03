@@ -230,7 +230,12 @@
                     @foreach($cartItems as $item)
                         <div class="d-flex align-items-center gap-3 py-2 border-bottom">
                             @if($item->product->images->first())
-                                <img src="{{ filter_var($item->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $item->product->images->first()->image_path : asset($item->product->images->first()->image_path) }}" alt="" class="cart-item-img">
+                                @include('partials.optimized_image', [
+                                    'src' => filter_var($item->product->images->first()->image_path, FILTER_VALIDATE_URL) ? $item->product->images->first()->image_path : asset($item->product->images->first()->image_path),
+                                    'alt' => $item->product->name,
+                                    'class' => 'cart-item-img',
+                                    'sizes' => '60px',
+                                ])
                             @else
                                 <img src="https://via.placeholder.com/60?text=No+Image" alt="" class="cart-item-img">
                             @endif

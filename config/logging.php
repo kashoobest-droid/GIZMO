@@ -126,6 +126,27 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        // Custom channels for better triage
+        'orders' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/order.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
+        'payments' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/payment.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
+        'inventory' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/inventory.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];
